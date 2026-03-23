@@ -4,6 +4,8 @@ node_modules/
 # Build outputs
 dist/
 .turbo/
+tsconfig.tsbuildinfo
+*.tsbuildinfo
 
 # Environment
 .env
@@ -19,6 +21,9 @@ Thumbs.db
 .idea/
 *.swp
 *.swo
+
+# Claude Code local settings (contains permission config)
+.claude/settings.local.json
 
 # Supabase local
 supabase/.temp/

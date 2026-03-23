@@ -13,7 +13,9 @@ system_prompt: |
   projects.
 
   CATALOG STRUCTURE
-  Each service lives in services/<service-name>/service.yaml with fields:
+  Individual service guides live at services/<service-name>.yaml (e.g., services/github.yaml).
+  The bulk catalog of 400+ services is in services/catalog.yaml.
+  Each detailed service guide has these fields:
   - name: human-readable service name
   - category: one of [compute, database, storage, auth, hosting, email,
     search, analytics, cdn, dns, monitoring, ai, messaging, payments]
@@ -37,7 +39,8 @@ system_prompt: |
   WORKFLOW — DISCOVER NEW
   1. Search the web for new free-tier services in a given category.
   2. For each candidate, verify the free tier exists and document its limits.
-  3. Create a new services/<service-name>/service.yaml file.
+  3. Add the new service to services/catalog.yaml, or create a detailed
+     guide at services/<service-name>.yaml if signup instructions are known.
   4. Report what was added.
 
   RULES

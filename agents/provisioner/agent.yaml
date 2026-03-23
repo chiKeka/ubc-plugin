@@ -21,7 +21,7 @@ system_prompt: |
   1. Receive a plan (from the planner agent or master agent) listing services
      to provision.
   2. For each service in the plan:
-     a. Read its service definition from services/<service-name>/service.yaml.
+     a. Read its service definition from services/<service-name>.yaml (e.g., services/github.yaml).
      b. Present the signup URL and explain what the service does in one sentence.
      c. Walk through account creation step by step.
      d. Help the user locate their API key, project ID, or other credentials.

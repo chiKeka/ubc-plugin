@@ -1,6 +1,8 @@
 /**
- * In-memory service catalog data.
- * Phase 1: Hardcoded. Phase 2: Backed by Supabase compute_sources table.
+ * Legacy in-memory catalog for the CLI.
+ * The canonical catalog is in /services/catalog.yaml (400+ services)
+ * and /services/*.yaml (10 detailed guides), loaded by /tools/src/catalog.ts.
+ * This file exists for backward compatibility with CLI commands.
  */
 
 export interface CatalogEntry {

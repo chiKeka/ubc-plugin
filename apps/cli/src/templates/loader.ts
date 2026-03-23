@@ -1,5 +1,5 @@
 /**
- * Template loader — reads YAML service templates from the templates/ directory.
+ * Template loader — reads YAML service definitions from the /services/ directory.
  */
 
 import { readFileSync, existsSync, readdirSync } from "node:fs";
@@ -9,8 +9,8 @@ import { parse } from "yaml";
 import type { ServiceTemplate } from "./schema.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-// Templates live at the repo root /templates/
-const TEMPLATES_DIR = join(__dirname, "..", "..", "..", "..", "..", "templates");
+// Service definitions live at the repo root /services/
+const TEMPLATES_DIR = join(__dirname, "..", "..", "..", "..", "..", "services");
 
 export function loadTemplate(serviceName: string): ServiceTemplate | null {
   const fileName = `${serviceName.toLowerCase()}.yaml`;
@@ -28,7 +28,7 @@ export function listTemplates(): string[] {
   try {
     const files = readdirSync(TEMPLATES_DIR, "utf-8");
     return files
-      .filter((f) => f.endsWith(".yaml"))
+      .filter((f) => f.endsWith(".yaml") && f !== "catalog.yaml")
       .map((f) => f.replace(".yaml", ""));
   } catch {
     return [];
