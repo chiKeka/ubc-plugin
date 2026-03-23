@@ -26,5 +26,8 @@ supabase/.temp/
 # CLI config (contains API keys)
 .ubcrc
 
+# UBC local state and credentials
+.ubc/
+
 # Test
 coverage/

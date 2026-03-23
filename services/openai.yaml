@@ -1,0 +1,64 @@
+name: OpenAI API
+provider: OpenAI
+category: ai_llm
+website: https://platform.openai.com
+pricing_url: https://openai.com/api/pricing/
+description: GPT models, embeddings, DALL-E image generation, Whisper speech-to-text, TTS
+
+free_tier:
+  - name: Free Credits
+    value: 5
+    unit: USD
+    notes: One-time trial credits for new accounts
+  - name: Rate Limit (GPT-4o-mini)
+    value: 500
+    unit: requests/minute
+  - name: Rate Limit (GPT-3.5-turbo)
+    value: 500
+    unit: requests/minute
+
+signup:
+  url: https://platform.openai.com/signup
+  method: email
+  steps:
+    - Go to platform.openai.com/signup
+    - Enter your email or click "Continue with Google"
+    - Create a password
+    - Check your email and verify your account
+    - Complete the onboarding (you can skip most of it)
+
+credentials:
+  - name: OPENAI_API_KEY
+    env_var: OPENAI_API_KEY
+    type: api_key
+    how_to_get:
+      url: https://platform.openai.com/api-keys
+      steps:
+        - Go to platform.openai.com/api-keys
+        - Click "Create new secret key"
+        - Name it "ubc-key"
+        - Click "Create secret key"
+        - Copy the key immediately (starts with sk-)
+        - You won't be able to see it again!
+    validation: "^sk-[a-zA-Z0-9_-]{20,}$"
+
+  - name: OPENAI_ORG_ID
+    env_var: OPENAI_ORG_ID
+    type: api_key
+    optional: true
+    how_to_get:
+      url: https://platform.openai.com/settings/organization/general
+      steps:
+        - Go to platform.openai.com/settings/organization/general
+        - Find "Organization ID"
+        - Copy it (starts with org-)
+    validation: "^org-[a-zA-Z0-9]+$"
+
+provides:
+  - llm_api
+  - embeddings
+  - image_generation
+  - speech_to_text
+  - text_to_speech
+
+depends_on: []

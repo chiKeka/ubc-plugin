@@ -1,0 +1,84 @@
+name: Supabase
+provider: Supabase
+category: cloud_infrastructure
+website: https://supabase.com
+pricing_url: https://supabase.com/pricing
+description: Postgres database, Auth, Edge Functions, Realtime, Storage, Vector embeddings
+
+free_tier:
+  - name: Database Size
+    value: 500
+    unit: MB
+  - name: Storage
+    value: 1
+    unit: GB
+  - name: Edge Function Invocations
+    value: 500000
+    unit: per month
+  - name: Auth MAUs
+    value: 50000
+    unit: per month
+  - name: Realtime Messages
+    value: 2000000
+    unit: per month
+
+signup:
+  url: https://supabase.com/dashboard
+  method: github_oauth
+  requires: github
+  steps:
+    - Go to supabase.com/dashboard
+    - Click "Continue with GitHub"
+    - Authorize Supabase
+    - Click "New project"
+    - Name your project (e.g., "my-ubc-project")
+    - Set a database password (save this somewhere safe!)
+    - Pick a region close to you
+    - Click "Create new project"
+    - Wait about 2 minutes for it to set up
+
+credentials:
+  - name: SUPABASE_URL
+    env_var: SUPABASE_URL
+    type: connection_string
+    how_to_get:
+      url: https://supabase.com/dashboard/project/_/settings/api
+      steps:
+        - In your Supabase dashboard, go to Settings > API
+        - Find "Project URL"
+        - Copy the URL (looks like https://xxxxx.supabase.co)
+    validation: "^https://[a-z]+\\.supabase\\.co$"
+
+  - name: SUPABASE_ANON_KEY
+    env_var: SUPABASE_ANON_KEY
+    type: api_key
+    how_to_get:
+      url: https://supabase.com/dashboard/project/_/settings/api
+      steps:
+        - In your Supabase dashboard, go to Settings > API
+        - Find "anon public" key under "Project API keys"
+        - Copy the key (it's a long string starting with eyJ...)
+    validation: "^eyJ[a-zA-Z0-9_-]+\\.[a-zA-Z0-9_-]+\\.[a-zA-Z0-9_-]+$"
+
+  - name: SUPABASE_SERVICE_ROLE_KEY
+    env_var: SUPABASE_SERVICE_ROLE_KEY
+    type: api_key
+    sensitive: true
+    how_to_get:
+      url: https://supabase.com/dashboard/project/_/settings/api
+      steps:
+        - In your Supabase dashboard, go to Settings > API
+        - Find "service_role" key (click "Reveal" if hidden)
+        - Copy the key (keep this SECRET — it bypasses Row Level Security)
+    validation: "^eyJ[a-zA-Z0-9_-]+\\.[a-zA-Z0-9_-]+\\.[a-zA-Z0-9_-]+$"
+
+provides:
+  - database
+  - auth
+  - edge_functions
+  - realtime
+  - storage
+  - vector_embeddings
+
+depends_on:
+  - github

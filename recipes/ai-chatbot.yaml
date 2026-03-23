@@ -1,0 +1,35 @@
+id: ai-chatbot
+name: AI Chatbot
+description: A GPT-powered chatbot with conversation memory and a clean interface
+icon: message-circle
+
+services:
+  - service: github
+    role: code_hosting
+    reason: Host the chatbot source code
+  - service: vercel
+    role: hosting
+    reason: Deploy the chatbot with streaming support
+  - service: supabase
+    role: database
+    reason: Store conversation history and user sessions
+  - service: openai
+    role: ai_api
+    reason: Power the chatbot with GPT models
+
+builds:
+  framework: Next.js 14
+  features:
+    - Chat interface with streaming responses
+    - Conversation history (stored in Supabase)
+    - Multiple chat sessions
+    - System prompt customization
+    - Token usage tracking
+    - Share conversations via link
+  deploy_to: Vercel
+
+estimated_usage:
+  openai: ~$3-5/month depending on usage (free credits cover initial period)
+  supabase: ~50MB for conversation storage
+  vercel: Streaming serverless functions within free tier
+  github: Minimal usage

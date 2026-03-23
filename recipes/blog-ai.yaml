@@ -1,0 +1,35 @@
+id: blog-ai
+name: Blog with AI
+description: A blog with AI-powered summarization, content suggestions, and smart search
+icon: pencil
+
+services:
+  - service: github
+    role: code_hosting
+    reason: Host your blog's source code and enable CI/CD
+  - service: vercel
+    role: hosting
+    reason: Deploy and host your blog with instant previews
+  - service: supabase
+    role: database
+    reason: Store blog posts, comments, and user data
+  - service: openai
+    role: ai_api
+    reason: Power AI summarization, content suggestions, and smart search
+
+builds:
+  framework: Next.js 14
+  features:
+    - Markdown blog posts stored in Supabase
+    - AI-generated post summaries (OpenAI)
+    - Smart search with embeddings
+    - Comment system with auth
+    - RSS feed
+    - SEO optimized
+  deploy_to: Vercel
+
+estimated_usage:
+  openai: ~$2/month of free credits for moderate blogging
+  supabase: ~50MB database for thousands of posts
+  vercel: Well within free tier for personal blog
+  github: Minimal Actions usage for deployments

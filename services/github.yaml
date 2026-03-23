@@ -1,0 +1,54 @@
+name: GitHub
+provider: GitHub
+category: cloud_infrastructure
+website: https://github.com
+pricing_url: https://github.com/pricing
+description: Code hosting, CI/CD with Actions, Packages, Codespaces
+
+free_tier:
+  - name: Actions Minutes
+    value: 2000
+    unit: minutes/month
+    notes: Public repos; 500 for private
+  - name: Packages Storage
+    value: 500
+    unit: MB
+  - name: Codespaces
+    value: 120
+    unit: core-hours/month
+
+signup:
+  url: https://github.com/signup
+  method: email
+  steps:
+    - Go to github.com/signup
+    - Enter your email address
+    - Create a password (make it strong!)
+    - Choose a username
+    - Complete the verification puzzle
+    - Check your email and click the verification link
+
+credentials:
+  - name: GITHUB_TOKEN
+    env_var: GITHUB_TOKEN
+    type: personal_access_token
+    how_to_get:
+      url: https://github.com/settings/tokens?type=beta
+      steps:
+        - Go to github.com/settings/tokens?type=beta
+        - Click "Generate new token"
+        - Name it "ubc-token"
+        - Set expiration to 90 days
+        - Under "Repository access", select "All repositories"
+        - Under "Permissions > Repository permissions", enable "Contents" (Read and write)
+        - Click "Generate token"
+        - "Copy the token — it starts with github_pat_"
+    validation: "^github_pat_[a-zA-Z0-9_]{22,}$|^ghp_[a-zA-Z0-9]{36}$"
+
+provides:
+  - code_hosting
+  - ci_cd
+  - container_registry
+  - codespaces
+
+depends_on: []

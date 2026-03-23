@@ -1,0 +1,32 @@
+id: api-backend
+name: API Backend
+description: A REST API with database, auth, and edge deployment on Cloudflare Workers
+icon: server
+
+services:
+  - service: github
+    role: code_hosting
+    reason: Source code and deployment pipeline
+  - service: supabase
+    role: database
+    reason: Postgres database with built-in auth and API
+  - service: cloudflare
+    role: hosting
+    reason: Edge-deployed API on Cloudflare Workers with D1 for caching
+
+builds:
+  framework: Hono (Cloudflare Workers)
+  features:
+    - REST API with CRUD endpoints
+    - Authentication via Supabase Auth
+    - Postgres database (Supabase) for persistent data
+    - D1 SQLite (Cloudflare) for edge caching
+    - Rate limiting
+    - OpenAPI documentation
+    - CORS configuration
+  deploy_to: Cloudflare Workers
+
+estimated_usage:
+  cloudflare: 100k requests/day well within Workers free tier
+  supabase: ~50MB database, Edge Functions for webhooks
+  github: CI/CD for deployments

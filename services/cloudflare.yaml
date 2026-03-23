@@ -1,0 +1,76 @@
+name: Cloudflare
+provider: Cloudflare
+category: cloud_infrastructure
+website: https://cloudflare.com
+pricing_url: https://www.cloudflare.com/plans/
+description: CDN, Workers serverless, Pages hosting, R2 object storage, D1 SQLite database, KV store
+
+free_tier:
+  - name: Workers Requests
+    value: 100000
+    unit: per day
+  - name: Pages Builds
+    value: 500
+    unit: per month
+  - name: R2 Storage
+    value: 10
+    unit: GB/month
+  - name: R2 Operations (Class A)
+    value: 1000000
+    unit: per month
+  - name: D1 Database
+    value: 5
+    unit: GB
+  - name: D1 Reads
+    value: 5000000
+    unit: per day
+  - name: KV Reads
+    value: 100000
+    unit: per day
+
+signup:
+  url: https://dash.cloudflare.com/sign-up
+  method: email
+  steps:
+    - Go to dash.cloudflare.com/sign-up
+    - Enter your email and create a password
+    - Check your email and click the verification link
+    - You can skip the "add a website" step for now
+
+credentials:
+  - name: CLOUDFLARE_API_TOKEN
+    env_var: CLOUDFLARE_API_TOKEN
+    type: api_token
+    how_to_get:
+      url: https://dash.cloudflare.com/profile/api-tokens
+      steps:
+        - Go to dash.cloudflare.com/profile/api-tokens
+        - Click "Create Token"
+        - Find "Edit Cloudflare Workers" template and click "Use template"
+        - Click "Continue to summary"
+        - Click "Create Token"
+        - Copy the token immediately
+    validation: "^[a-zA-Z0-9_-]{40,}$"
+
+  - name: CLOUDFLARE_ACCOUNT_ID
+    env_var: CLOUDFLARE_ACCOUNT_ID
+    type: account_id
+    how_to_get:
+      url: https://dash.cloudflare.com
+      steps:
+        - Go to your Cloudflare dashboard
+        - Click on "Workers & Pages" in the left sidebar
+        - Your Account ID is shown on the right side
+        - Copy it (it's a long string of letters and numbers)
+    validation: "^[a-f0-9]{32}$"
+
+provides:
+  - cdn
+  - workers
+  - pages
+  - r2_storage
+  - d1_database
+  - kv_storage
+  - dns
+
+depends_on: []

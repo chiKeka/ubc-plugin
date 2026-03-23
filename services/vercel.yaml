@@ -1,0 +1,55 @@
+name: Vercel
+provider: Vercel
+category: cloud_infrastructure
+website: https://vercel.com
+pricing_url: https://vercel.com/pricing
+description: Frontend hosting, serverless functions, edge network, preview deployments
+
+free_tier:
+  - name: Bandwidth
+    value: 100
+    unit: GB/month
+  - name: Serverless Function Execution
+    value: 100
+    unit: GB-hours/month
+  - name: Build Minutes
+    value: 6000
+    unit: minutes/month
+  - name: Deployments
+    value: 100
+    unit: per day
+
+signup:
+  url: https://vercel.com/signup
+  method: github_oauth
+  requires: github
+  steps:
+    - Go to vercel.com/signup
+    - Click "Continue with GitHub"
+    - Authorize Vercel to access your GitHub account
+    - You're in! Vercel will show your dashboard
+
+credentials:
+  - name: VERCEL_TOKEN
+    env_var: VERCEL_TOKEN
+    type: api_token
+    how_to_get:
+      url: https://vercel.com/account/tokens
+      steps:
+        - Go to vercel.com/account/tokens
+        - Click "Create Token"
+        - Name it "ubc-deploy-token"
+        - Set scope to "Full Account"
+        - Click "Create Token"
+        - Copy the token immediately (you won't see it again)
+    validation: "^[a-zA-Z0-9]{24,}$"
+
+provides:
+  - hosting
+  - serverless_functions
+  - edge_functions
+  - ci_cd
+  - preview_deployments
+
+depends_on:
+  - github

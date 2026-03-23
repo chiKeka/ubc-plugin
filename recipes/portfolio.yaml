@@ -1,0 +1,31 @@
+id: portfolio
+name: Portfolio Site
+description: A personal portfolio with project showcase, contact form, and analytics
+icon: user
+
+services:
+  - service: github
+    role: code_hosting
+    reason: Host your portfolio code
+  - service: vercel
+    role: hosting
+    reason: Fast global deployment with custom domain support
+  - service: supabase
+    role: database
+    reason: Store contact form submissions and visitor analytics
+
+builds:
+  framework: Next.js 14
+  features:
+    - Project showcase with images
+    - About me section
+    - Contact form (stored in Supabase)
+    - Basic analytics (page views)
+    - Responsive design
+    - Dark/light mode
+  deploy_to: Vercel
+
+estimated_usage:
+  supabase: ~10MB database, minimal usage
+  vercel: Well within free tier
+  github: Minimal usage

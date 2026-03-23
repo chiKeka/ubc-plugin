@@ -1,0 +1,36 @@
+id: saas-starter
+name: SaaS Starter
+description: Full-stack SaaS template with auth, database, API, and edge deployment
+icon: rocket
+
+services:
+  - service: github
+    role: code_hosting
+    reason: Source code and CI/CD pipeline
+  - service: vercel
+    role: hosting
+    reason: Frontend hosting with serverless API routes
+  - service: supabase
+    role: database
+    reason: Postgres database, authentication, and row-level security
+  - service: cloudflare
+    role: cdn
+    reason: CDN for static assets and edge caching
+
+builds:
+  framework: Next.js 14
+  features:
+    - Email/password and OAuth authentication (Supabase Auth)
+    - User dashboard with profile management
+    - Postgres database with Row Level Security
+    - API routes with rate limiting
+    - Cloudflare CDN for assets
+    - Responsive landing page
+    - Admin panel (basic)
+  deploy_to: Vercel
+
+estimated_usage:
+  supabase: ~100MB database, auth well within 50k MAU
+  vercel: Serverless functions within 100 GB-hrs
+  cloudflare: CDN within free tier
+  github: CI/CD within 2000 min/month
