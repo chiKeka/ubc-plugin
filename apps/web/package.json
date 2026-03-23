@@ -1,0 +1,13 @@
+{
+  "name": "@ubcv2/web",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "build": "echo 'web build - phase 3'",
+    "dev": "echo 'web dev - phase 3'",
+    "typecheck": "echo 'web typecheck - phase 3'"
+  },
+  "dependencies": {
+    "@ubcv2/shared": "workspace:*"
+  }
+}
