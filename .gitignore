@@ -1,10 +1,9 @@
 # Dependencies
 node_modules/
+package-lock.json
 
 # Build outputs
 dist/
-.turbo/
-tsconfig.tsbuildinfo
 *.tsbuildinfo
 
 # Environment
@@ -21,15 +20,6 @@ Thumbs.db
 .idea/
 *.swp
 *.swo
-
-# Claude Code local settings (contains permission config)
-.claude/settings.local.json
-
-# Supabase local
-supabase/.temp/
-
-# CLI config (contains API keys)
-.ubcrc
 
 # UBC local state and credentials
 .ubc/

@@ -1,0 +1,21 @@
+{
+  "name": "universal-basic-compute",
+  "description": "DIY agent toolkit for provisioning and assembling free-tier cloud services. 418 services, 6 agents, 5 project recipes.",
+  "version": "0.2.0",
+  "author": {
+    "name": "Bruno Chikeka",
+    "url": "https://github.com/chiKeka"
+  },
+  "homepage": "https://github.com/chiKeka/universalbasiccompute-v2",
+  "repository": "https://github.com/chiKeka/universalbasiccompute-v2",
+  "license": "MIT",
+  "keywords": [
+    "free-tier",
+    "cloud",
+    "compute",
+    "provisioning",
+    "agents",
+    "devtools",
+    "automation"
+  ]
+}
