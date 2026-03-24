@@ -4,8 +4,8 @@ description: Provision and assemble free-tier cloud services into working projec
 version: 0.2.0
 mcp:
   ubc:
-    command: node
-    args: ["--import", "tsx/esm", "tools/src/index.ts"]
+    command: npx
+    args: ["tsx", "tools/src/index.ts"]
 ---
 
 # Universal Basic Compute

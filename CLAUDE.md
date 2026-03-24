@@ -55,14 +55,14 @@ Pre-built project blueprints:
 
 ## MCP Tools Server (in `/tools/`)
 
-A standalone MCP server exposing all UBC capabilities. Connect from any agent platform:
+Auto-registered via `.mcp.json` when the plugin is loaded. For manual connection from other agents:
 
 ```json
 {
   "mcpServers": {
     "ubc": {
-      "command": "node",
-      "args": ["--import", "tsx/esm", "tools/src/index.ts"],
+      "command": "npx",
+      "args": ["tsx", "tools/src/index.ts"],
       "cwd": "<path-to-this-repo>"
     }
   }

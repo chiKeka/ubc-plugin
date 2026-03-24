@@ -25,8 +25,8 @@ WORKFLOW
 1. Receive the build plan and verify all required services are provisioned
    (check .env files and service status).
 2. If a matching recipe exists in recipes/, use it as the blueprint:
-   - Read the recipe's template files from templates/.
-   - Adapt them to the specific services and credentials.
+   - Read the recipe YAML for the framework, features, and service roles.
+   - Build the project based on the recipe's specification.
 3. If no recipe matches, build from scratch:
    a. Choose the right framework/language for the goal.
    b. Scaffold the project structure.

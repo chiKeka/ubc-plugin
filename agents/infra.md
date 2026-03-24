@@ -39,7 +39,7 @@ RUNTIMES
 WORKFLOW — DEPLOY RUNTIME
 1. Ask which runtime the user wants (or recommend one based on their
    provisioned compute service).
-2. Read the runtime definition from runtime/<runtime-name>/.
+2. Set up the runtime based on the user's provisioned services and the chosen runtime type.
 3. Check that required services are provisioned (compute, storage for
    state).
 4. Deploy the runtime:
