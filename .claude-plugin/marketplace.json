@@ -1,0 +1,28 @@
+{
+  "name": "ubc-tools",
+  "owner": {
+    "name": "Bruno Chikeka",
+    "email": "chikeka@github.com"
+  },
+  "metadata": {
+    "description": "Free-tier cloud service provisioning and assembly toolkit for Claude Code",
+    "version": "0.2.0"
+  },
+  "plugins": [
+    {
+      "name": "universal-basic-compute",
+      "source": ".",
+      "description": "DIY agent toolkit for provisioning and assembling free-tier cloud services. 6 agents, 5 project recipes, 400+ services.",
+      "version": "0.2.0",
+      "author": {
+        "name": "Bruno Chikeka"
+      },
+      "homepage": "https://github.com/chiKeka/ubc-plugin",
+      "repository": "https://github.com/chiKeka/ubc-plugin",
+      "license": "MIT",
+      "keywords": ["free-tier", "cloud", "compute", "provisioning", "agents", "devtools", "automation"],
+      "category": "devtools",
+      "tags": ["free-tier", "cloud", "provisioning", "deployment", "ai-agents"]
+    }
+  ]
+}
