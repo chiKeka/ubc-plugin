@@ -19,7 +19,7 @@ import { storeCredential, getCredentials, getCredential } from "./credentials.js
 
 const server = new McpServer({
   name: "ubc-tools",
-  version: "0.1.0",
+  version: "0.2.0",
 });
 
 // ── Tools ──────────────────────────────────────────────
@@ -152,7 +152,11 @@ server.tool(
       service: c.service,
       name: c.name,
       type: c.type,
-      value: reveal ? c.value : c.value.slice(0, 8) + "..." + c.value.slice(-4),
+      value: reveal
+        ? c.value
+        : c.value.length >= 16
+          ? c.value.slice(0, 4) + "****" + c.value.slice(-4)
+          : "****",
     }));
     return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
   }

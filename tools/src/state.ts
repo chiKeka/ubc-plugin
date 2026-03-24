@@ -2,7 +2,7 @@
  * State management — tracks what's provisioned in .ubc/state.json
  */
 
-import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
+import { readFileSync, writeFileSync, existsSync, mkdirSync, chmodSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -44,10 +44,11 @@ export function getState(): UBCState {
 
 function saveState(state: UBCState): void {
   if (!existsSync(UBC_DIR)) {
-    mkdirSync(UBC_DIR, { recursive: true });
+    mkdirSync(UBC_DIR, { recursive: true, mode: 0o700 });
   }
   state.updated_at = new Date().toISOString();
-  writeFileSync(STATE_FILE, JSON.stringify(state, null, 2), "utf-8");
+  writeFileSync(STATE_FILE, JSON.stringify(state, null, 2), { encoding: "utf-8", mode: 0o600 });
+  chmodSync(STATE_FILE, 0o600);
 }
 
 export function updateServiceStatus(

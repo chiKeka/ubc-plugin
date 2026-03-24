@@ -30,10 +30,20 @@ export function loadAllRecipes(): Recipe[] {
   if (cache) return cache;
 
   const files = readdirSync(RECIPES_DIR).filter((f) => f.endsWith(".yaml"));
-  cache = files.map((f) => {
-    const raw = readFileSync(join(RECIPES_DIR, f), "utf-8");
-    return parse(raw) as Recipe;
-  });
+  cache = [];
+  for (const f of files) {
+    try {
+      const raw = readFileSync(join(RECIPES_DIR, f), "utf-8");
+      const parsed = parse(raw) as Recipe;
+      if (parsed && parsed.id && parsed.name) {
+        cache.push(parsed);
+      } else {
+        console.error(`Skipping recipe ${f}: missing required fields (id, name)`);
+      }
+    } catch (err) {
+      console.error(`Failed to parse recipe ${f}:`, err);
+    }
+  }
   return cache;
 }
 

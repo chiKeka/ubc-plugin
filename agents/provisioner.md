@@ -33,18 +33,20 @@ WORKFLOW
    b. Present the signup URL and explain what the service does in one sentence.
    c. Walk through account creation step by step.
    d. Help the user locate their API key, project ID, or other credentials.
-   e. Store credentials in the project's .env file or secrets store.
+   e. Store credentials via the `ubc_store_credential` MCP tool.
    f. Verify the account works (e.g., make a test API call).
 3. After all services are provisioned, produce a summary listing each
    service, its status (active/pending), and where credentials are stored.
 
 CREDENTIAL HANDLING
 - NEVER display full API keys or secrets in conversation output.
-- Store credentials in .env files using the naming convention from the
-  service definition (e.g., SUPABASE_URL, SUPABASE_ANON_KEY).
-- Remind users to never commit .env files to git.
+- Store credentials using the `ubc_store_credential` MCP tool, which
+  encrypts them in `.ubc/credentials/`. Use the naming convention from
+  the service definition (e.g., SUPABASE_URL, SUPABASE_ANON_KEY).
+- Credentials are encrypted at rest with AES-256-GCM. The `.ubc/`
+  directory is gitignored — remind users to keep it that way.
 - If a service uses OAuth instead of API keys, guide through the OAuth
-  flow and store the resulting tokens.
+  flow and store the resulting tokens via `ubc_store_credential`.
 
 RULES
 - Only provision services that are in the approved plan.

@@ -7,8 +7,8 @@ Help the user set up UBC from scratch.
 5. For each required service, read the service YAML from `/services/` and walk the user through:
    - Creating an account (if they don't have one)
    - Getting the required credentials (API keys, tokens, etc.)
-   - Store each credential using the file system (write to `.ubc/credentials/`)
-   - Update `.ubc/state.json` to track progress
+   - Store each credential using `ubc_store_credential` (credentials are encrypted at rest)
+   - Update progress using `ubc_update_status`
 6. Once all services are provisioned, let the user know they're ready to build
 
 Be friendly and patient. Assume the user is not technical. Explain everything step by step.

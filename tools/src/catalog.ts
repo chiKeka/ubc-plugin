@@ -62,10 +62,20 @@ export function loadDetailedServices(): ServiceDefinition[] {
   const files = readdirSync(SERVICES_DIR).filter(
     (f) => f.endsWith(".yaml") && f !== "catalog.yaml"
   );
-  detailedCache = files.map((f) => {
-    const raw = readFileSync(join(SERVICES_DIR, f), "utf-8");
-    return parse(raw) as ServiceDefinition;
-  });
+  detailedCache = [];
+  for (const f of files) {
+    try {
+      const raw = readFileSync(join(SERVICES_DIR, f), "utf-8");
+      const parsed = parse(raw) as ServiceDefinition;
+      if (parsed && parsed.name && parsed.category) {
+        detailedCache.push(parsed);
+      } else {
+        console.error(`Skipping ${f}: missing required fields (name, category)`);
+      }
+    } catch (err) {
+      console.error(`Failed to parse ${f}:`, err);
+    }
+  }
   return detailedCache;
 }
 
@@ -78,24 +88,37 @@ export function loadBulkCatalog(): CatalogEntry[] {
     return bulkCache;
   }
 
-  const raw = readFileSync(CATALOG_FILE, "utf-8");
-  const entries = parse(raw) as Array<{
-    name: string;
-    provider: string;
-    category: string;
-    website: string;
-    description: string;
-    free_tier: string;
-  }>;
+  try {
+    const raw = readFileSync(CATALOG_FILE, "utf-8");
+    const entries = parse(raw) as Array<{
+      name: string;
+      provider: string;
+      category: string;
+      website: string;
+      description: string;
+      free_tier: string;
+    }>;
 
-  const detailedNames = new Set(
-    loadDetailedServices().map((s) => s.name.toLowerCase())
-  );
+    if (!Array.isArray(entries)) {
+      console.error("catalog.yaml did not parse as an array");
+      bulkCache = [];
+      return bulkCache;
+    }
 
-  bulkCache = entries.map((e) => ({
-    ...e,
-    has_detailed_guide: detailedNames.has(e.name.toLowerCase()),
-  }));
+    const detailedNames = new Set(
+      loadDetailedServices().map((s) => s.name.toLowerCase())
+    );
+
+    bulkCache = entries
+      .filter((e) => e && e.name && e.category)
+      .map((e) => ({
+        ...e,
+        has_detailed_guide: detailedNames.has(e.name.toLowerCase()),
+      }));
+  } catch (err) {
+    console.error("Failed to parse catalog.yaml:", err);
+    bulkCache = [];
+  }
 
   return bulkCache;
 }
