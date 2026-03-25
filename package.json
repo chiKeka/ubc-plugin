@@ -1,8 +1,8 @@
 {
   "name": "universal-basic-compute",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
-  "description": "Claude Code plugin — DIY agent toolkit for free-tier cloud services",
+  "description": "Claude Code plugin — domain-agnostic agent toolkit for assembling free resources into outcomes",
   "scripts": {
     "mcp": "npx tsx tools/src/index.ts",
     "postinstall": "echo 'UBC plugin ready. Open in Claude Code and type /setup'"

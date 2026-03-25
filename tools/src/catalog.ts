@@ -1,20 +1,16 @@
 /**
- * Service catalog — two-tier system:
- * Tier 1: Detailed service definitions (/services/*.yaml) — 10 services with full guides
- * Tier 2: Bulk catalog (/services/catalog.yaml) — 400+ services with basic info
+ * Resource catalog — two-tier system, domain-aware:
+ * Tier 1: Detailed resource definitions (domains/{domain}/resources/*.yaml)
+ * Tier 2: Bulk catalog (domains/{domain}/resources/catalog.yaml)
  */
 
 import { readFileSync, readdirSync, existsSync } from "node:fs";
-import { join, dirname } from "node:path";
-import { fileURLToPath } from "node:url";
+import { join } from "node:path";
 import { parse } from "yaml";
+import { domainResourcesDir } from "./domains.js";
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const SERVICES_DIR = join(__dirname, "..", "..", "services");
-const CATALOG_FILE = join(SERVICES_DIR, "catalog.yaml");
-
-/** Tier 1: Full service definition with signup guide and credential instructions */
-export interface ServiceDefinition {
+/** Tier 1: Full resource definition with access guide and credential instructions */
+export interface ResourceDefinition {
   name: string;
   provider: string;
   category: string;
@@ -52,44 +48,64 @@ export interface CatalogEntry {
   has_detailed_guide: boolean;
 }
 
-let detailedCache: ServiceDefinition[] | null = null;
-let bulkCache: CatalogEntry[] | null = null;
+// Domain-keyed caches
+const detailedCaches = new Map<string, ResourceDefinition[]>();
+const bulkCaches = new Map<string, CatalogEntry[]>();
 
-/** Load Tier 1 detailed service definitions (individual YAML files) */
-export function loadDetailedServices(): ServiceDefinition[] {
-  if (detailedCache) return detailedCache;
-
-  const files = readdirSync(SERVICES_DIR).filter(
-    (f) => f.endsWith(".yaml") && f !== "catalog.yaml"
-  );
-  detailedCache = [];
-  for (const f of files) {
-    try {
-      const raw = readFileSync(join(SERVICES_DIR, f), "utf-8");
-      const parsed = parse(raw) as ServiceDefinition;
-      if (parsed && parsed.name && parsed.category) {
-        detailedCache.push(parsed);
-      } else {
-        console.error(`Skipping ${f}: missing required fields (name, category)`);
-      }
-    } catch (err) {
-      console.error(`Failed to parse ${f}:`, err);
-    }
+/** Clear caches for a domain (or all domains). */
+export function clearCache(domain?: string): void {
+  if (domain) {
+    detailedCaches.delete(domain);
+    bulkCaches.delete(domain);
+  } else {
+    detailedCaches.clear();
+    bulkCaches.clear();
   }
-  return detailedCache;
 }
 
-/** Load Tier 2 bulk catalog */
-export function loadBulkCatalog(): CatalogEntry[] {
-  if (bulkCache) return bulkCache;
+/** Load Tier 1 detailed resource definitions for a domain. */
+export function loadDetailedResources(domain: string = "compute"): ResourceDefinition[] {
+  if (detailedCaches.has(domain)) return detailedCaches.get(domain)!;
 
-  if (!existsSync(CATALOG_FILE)) {
-    bulkCache = [];
-    return bulkCache;
+  const dir = domainResourcesDir(domain);
+  if (!existsSync(dir)) {
+    detailedCaches.set(domain, []);
+    return [];
+  }
+
+  const files = readdirSync(dir).filter(
+    (f) => f.endsWith(".yaml") && f !== "catalog.yaml"
+  );
+  const results: ResourceDefinition[] = [];
+  for (const f of files) {
+    try {
+      const raw = readFileSync(join(dir, f), "utf-8");
+      const parsed = parse(raw) as ResourceDefinition;
+      if (parsed && parsed.name && parsed.category) {
+        results.push(parsed);
+      } else {
+        console.error(`Skipping ${domain}/${f}: missing required fields (name, category)`);
+      }
+    } catch (err) {
+      console.error(`Failed to parse ${domain}/${f}:`, err);
+    }
+  }
+  detailedCaches.set(domain, results);
+  return results;
+}
+
+/** Load Tier 2 bulk catalog for a domain. */
+export function loadBulkCatalog(domain: string = "compute"): CatalogEntry[] {
+  if (bulkCaches.has(domain)) return bulkCaches.get(domain)!;
+
+  const catalogFile = join(domainResourcesDir(domain), "catalog.yaml");
+  if (!existsSync(catalogFile)) {
+    bulkCaches.set(domain, []);
+    return [];
   }
 
   try {
-    const raw = readFileSync(CATALOG_FILE, "utf-8");
+    const raw = readFileSync(catalogFile, "utf-8");
     const entries = parse(raw) as Array<{
       name: string;
       provider: string;
@@ -100,35 +116,35 @@ export function loadBulkCatalog(): CatalogEntry[] {
     }>;
 
     if (!Array.isArray(entries)) {
-      console.error("catalog.yaml did not parse as an array");
-      bulkCache = [];
-      return bulkCache;
+      console.error(`${domain}/catalog.yaml did not parse as an array`);
+      bulkCaches.set(domain, []);
+      return [];
     }
 
     const detailedNames = new Set(
-      loadDetailedServices().map((s) => s.name.toLowerCase())
+      loadDetailedResources(domain).map((s) => s.name.toLowerCase())
     );
 
-    bulkCache = entries
+    const result = entries
       .filter((e) => e && e.name && e.category)
       .map((e) => ({
         ...e,
         has_detailed_guide: detailedNames.has(e.name.toLowerCase()),
       }));
+    bulkCaches.set(domain, result);
   } catch (err) {
-    console.error("Failed to parse catalog.yaml:", err);
-    bulkCache = [];
+    console.error(`Failed to parse ${domain}/catalog.yaml:`, err);
+    bulkCaches.set(domain, []);
   }
 
-  return bulkCache;
+  return bulkCaches.get(domain)!;
 }
 
-/** Load ALL services (both tiers merged, Tier 1 enriched with guide flag) */
-export function loadAllServices(): CatalogEntry[] {
-  const detailed = loadDetailedServices();
-  const bulk = loadBulkCatalog();
+/** Load ALL resources for a domain (both tiers merged). */
+export function loadAllResources(domain: string = "compute"): CatalogEntry[] {
+  const detailed = loadDetailedResources(domain);
+  const bulk = loadBulkCatalog(domain);
 
-  // Start with detailed services (marked as having guides)
   const result: CatalogEntry[] = detailed.map((s) => ({
     name: s.name,
     provider: s.provider,
@@ -139,7 +155,6 @@ export function loadAllServices(): CatalogEntry[] {
     has_detailed_guide: true,
   }));
 
-  // Add bulk entries that don't have detailed guides
   const detailedNames = new Set(detailed.map((s) => s.name.toLowerCase()));
   for (const entry of bulk) {
     if (!detailedNames.has(entry.name.toLowerCase())) {
@@ -150,11 +165,11 @@ export function loadAllServices(): CatalogEntry[] {
   return result;
 }
 
-/** Get a detailed service definition (Tier 1 only) */
-export function loadService(name: string): ServiceDefinition | null {
-  const services = loadDetailedServices();
+/** Get a detailed resource definition (Tier 1 only). */
+export function loadResource(domain: string = "compute", name: string): ResourceDefinition | null {
+  const resources = loadDetailedResources(domain);
   return (
-    services.find(
+    resources.find(
       (s) =>
         s.name.toLowerCase() === name.toLowerCase() ||
         s.provider.toLowerCase() === name.toLowerCase()
@@ -162,9 +177,9 @@ export function loadService(name: string): ServiceDefinition | null {
   );
 }
 
-/** Search across ALL services (both tiers) */
-export function searchServices(query: string, category?: string): CatalogEntry[] {
-  let all = loadAllServices();
+/** Search across ALL resources for a domain (both tiers). */
+export function searchResources(domain: string = "compute", query: string, category?: string): CatalogEntry[] {
+  let all = loadAllResources(domain);
   if (category) {
     all = all.filter((s) => s.category === category);
   }
@@ -180,9 +195,9 @@ export function searchServices(query: string, category?: string): CatalogEntry[]
   return all;
 }
 
-/** Get count by category */
-export function getCategoryCounts(): Record<string, number> {
-  const all = loadAllServices();
+/** Get count by category for a domain. */
+export function getCategoryCounts(domain: string = "compute"): Record<string, number> {
+  const all = loadAllResources(domain);
   const counts: Record<string, number> = {};
   for (const s of all) {
     counts[s.category] = (counts[s.category] ?? 0) + 1;

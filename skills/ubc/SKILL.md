@@ -1,7 +1,7 @@
 ---
 name: Universal Basic Compute
-description: Provision and assemble free-tier cloud services into working projects
-version: 0.2.0
+description: Discover and assemble free resources into working outcomes across any domain
+version: 0.3.0
 mcp:
   ubc:
     command: npx
@@ -10,47 +10,54 @@ mcp:
 
 # Universal Basic Compute
 
-You can help users build projects using only free-tier cloud services.
+You can help users accomplish goals by discovering and assembling free resources.
 
 ## What You Can Do
 
 Use the UBC MCP tools to:
 
-1. **Browse services**: Call `ubc_catalog` to see available free-tier services (GitHub, Vercel, Supabase, OpenAI, Cloudflare, and more)
-2. **Guide setup**: Call `ubc_service_guide` with a service name to get step-by-step signup and credential instructions
-3. **Show recipes**: Call `ubc_recipes` to list pre-built project blueprints (blog, portfolio, SaaS, chatbot, API)
-4. **Check status**: Call `ubc_status` to see what the user has provisioned so far
-5. **Store credentials**: Call `ubc_store_credential` when the user gives you an API key or token
-6. **Track progress**: Call `ubc_update_status` to mark services as provisioned
+1. **List domains**: Call `ubc_domains` to see available resource domains (compute, education, etc.)
+2. **Browse resources**: Call `ubc_catalog` with a domain to see available free resources
+3. **Guide setup**: Call `ubc_resource_guide` to get step-by-step access instructions
+4. **Show patterns**: Call `ubc_patterns` to list proven resource combinations for a domain
+5. **Check status**: Call `ubc_status` to see what the user has acquired so far
+6. **Store access**: Call `ubc_store_access` when the user gives you a token or credential
+7. **Track progress**: Call `ubc_update_status` to mark resources as acquired
+8. **Create domains**: Call `ubc_create_domain` when a goal needs a new domain
 
 ## How To Help
 
-When a user asks to build something:
+When a user asks to accomplish something:
 
-1. Call `ubc_recipes` and suggest a matching recipe
-2. Call `ubc_recipe_detail` to see which services are needed
-3. Call `ubc_status` to check what's already set up
-4. For each missing service, call `ubc_service_guide` and walk the user through signup
-5. When they give you a credential, call `ubc_store_credential` to save it
-6. Once all services are ready, help them build and deploy
+1. Call `ubc_domains` to see what domains exist
+2. If their goal fits a domain, call `ubc_patterns` and suggest a matching pattern
+3. Call `ubc_pattern_detail` to see which resources are needed
+4. Call `ubc_status` to check what's already set up
+5. For each missing resource, call `ubc_resource_guide` and walk the user through access
+6. When they give you a token, call `ubc_store_access` to save it
+7. Once all resources are ready, help them build the outcome
+
+If no domain fits: explain that UBC can research and create new domains on the fly.
 
 ## Important Rules
 
 - Always use plain, simple language — assume the user is not technical
 - Never direct users to paid plans or billing pages
-- Only use free-tier services
+- Only use free resources
 - Be patient — guide them step by step
-- Celebrate progress ("Your GitHub is ready!")
+- Celebrate progress
 
 ## Available MCP Tools
 
 | Tool | Description |
 |------|-------------|
-| `ubc_catalog` | Browse free-tier services, filter by category |
-| `ubc_service_guide` | Get full setup guide for a service |
-| `ubc_recipes` | List all project recipes |
-| `ubc_recipe_detail` | Get details for a specific recipe |
-| `ubc_status` | Check current provisioning state |
-| `ubc_update_status` | Update a service's status |
-| `ubc_store_credential` | Store an API key or token |
-| `ubc_get_credentials` | Retrieve stored credentials |
+| `ubc_domains` | List all available domains |
+| `ubc_create_domain` | Scaffold a new domain |
+| `ubc_catalog` | Browse resources by domain |
+| `ubc_resource_guide` | Get full setup guide for a resource |
+| `ubc_patterns` | List assembly patterns for a domain |
+| `ubc_pattern_detail` | Get details for a specific pattern |
+| `ubc_status` | Check current state |
+| `ubc_update_status` | Update a resource's status |
+| `ubc_store_access` | Store an access token (encrypted) |
+| `ubc_get_access` | Retrieve stored access tokens |

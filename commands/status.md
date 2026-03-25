@@ -1,8 +1,10 @@
-Show the user their current UBC setup status.
+Show the user their current UBC status across all domains.
 
-1. Call `ubc_status` to get the current state
-2. Show which services are provisioned and which aren't
-3. Call `ubc_get_credentials` to show what credentials are stored (values stay masked)
-4. Show the active recipe (if any)
-5. Show the project status
-6. Suggest next steps based on what's missing
+1. Call `ubc_domains` to list available domains
+2. Call `ubc_status` to get the full state
+3. For each domain with activity, show:
+   - Which resources are acquired and which aren't
+   - Access tokens stored (values stay masked via `ubc_get_access`)
+   - Active pattern (if any)
+4. Show overall project status
+5. Suggest next steps based on what's missing

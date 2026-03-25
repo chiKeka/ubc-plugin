@@ -1,9 +1,12 @@
 /**
- * Credential storage — stores credentials locally in .ubc/credentials/
+ * Access storage — stores access tokens/credentials locally in .ubc/access/{domain}/
  *
- * Credentials are encrypted with AES-256-GCM using a machine-local key.
+ * Generalized from credentials.ts to handle any access type:
+ * API keys, enrollment IDs, account bookmarks, certificates, etc.
+ *
+ * Encrypted with AES-256-GCM using a machine-local key.
  * The key is generated on first use and stored in .ubc/.key (mode 0600).
- * Credential files are also stored with mode 0600 (owner-only read/write).
+ * Access files are stored with mode 0600 (owner-only read/write).
  */
 
 import {
@@ -17,20 +20,20 @@ import {
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { randomBytes, createCipheriv, createDecipheriv, scryptSync } from "node:crypto";
-import { addCredentialToState } from "./state.js";
+import { addAccessToState } from "./state.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const UBC_DIR = join(__dirname, "..", "..", ".ubc");
-const CREDS_DIR = join(UBC_DIR, "credentials");
 const KEY_FILE = join(UBC_DIR, ".key");
+const LEGACY_CREDS_DIR = join(UBC_DIR, "credentials");
 
 const ALGORITHM = "aes-256-gcm";
 const KEY_LENGTH = 32;
 const IV_LENGTH = 16;
 const AUTH_TAG_LENGTH = 16;
-const SALT = "ubc-credential-store"; // fixed salt — key file is the secret
+const SALT = "ubc-credential-store";
 
-export interface StoredCredential {
+export interface StoredAccess {
   service: string;
   name: string;
   value: string;
@@ -38,35 +41,39 @@ export interface StoredCredential {
   stored_at: string;
 }
 
-/** Encrypted on-disk format */
-interface EncryptedCredential {
+interface EncryptedAccess {
   service: string;
   name: string;
-  encrypted: string; // base64(iv + authTag + ciphertext)
+  encrypted: string;
   type: string;
   stored_at: string;
 }
 
-function ensureDir(): void {
+function accessDir(domain: string): string {
+  return join(UBC_DIR, "access", domain);
+}
+
+function ensureDir(domain: string): void {
   if (!existsSync(UBC_DIR)) {
     mkdirSync(UBC_DIR, { recursive: true, mode: 0o700 });
   }
-  if (!existsSync(CREDS_DIR)) {
-    mkdirSync(CREDS_DIR, { recursive: true, mode: 0o700 });
+  const dir = accessDir(domain);
+  if (!existsSync(dir)) {
+    mkdirSync(dir, { recursive: true, mode: 0o700 });
   }
 }
 
-/** Get or create the encryption key. Key file is mode 0600. */
 function getEncryptionKey(): Buffer {
-  ensureDir();
+  if (!existsSync(UBC_DIR)) {
+    mkdirSync(UBC_DIR, { recursive: true, mode: 0o700 });
+  }
   if (existsSync(KEY_FILE)) {
     const raw = readFileSync(KEY_FILE, "utf-8").trim();
     return scryptSync(raw, SALT, KEY_LENGTH);
   }
-  // Generate a new key on first use
   const secret = randomBytes(32).toString("hex");
   writeFileSync(KEY_FILE, secret, { encoding: "utf-8", mode: 0o600 });
-  chmodSync(KEY_FILE, 0o600); // ensure permissions even if umask interfered
+  chmodSync(KEY_FILE, 0o600);
   return scryptSync(secret, SALT, KEY_LENGTH);
 }
 
@@ -76,7 +83,6 @@ function encrypt(plaintext: string): string {
   const cipher = createCipheriv(ALGORITHM, key, iv, { authTagLength: AUTH_TAG_LENGTH });
   const encrypted = Buffer.concat([cipher.update(plaintext, "utf-8"), cipher.final()]);
   const authTag = cipher.getAuthTag();
-  // Pack as: iv (16) + authTag (16) + ciphertext
   return Buffer.concat([iv, authTag, encrypted]).toString("base64");
 }
 
@@ -91,23 +97,17 @@ function decrypt(packed: string): string {
   return decipher.update(ciphertext) + decipher.final("utf-8");
 }
 
-/**
- * Detect whether a credential file is legacy plaintext (has "value" field)
- * or encrypted (has "encrypted" field). Transparently migrate plaintext on read.
- */
-function readCredentialFile(filepath: string): StoredCredential {
+function readAccessFile(filepath: string): StoredAccess {
   const raw = readFileSync(filepath, "utf-8");
   const parsed = JSON.parse(raw);
 
   if ("value" in parsed && !("encrypted" in parsed)) {
-    // Legacy plaintext file — migrate to encrypted in place
-    const cred: StoredCredential = parsed as StoredCredential;
-    writeEncryptedCredential(filepath, cred);
+    const cred: StoredAccess = parsed as StoredAccess;
+    writeEncryptedAccess(filepath, cred);
     return cred;
   }
 
-  // Encrypted format
-  const enc = parsed as EncryptedCredential;
+  const enc = parsed as EncryptedAccess;
   return {
     service: enc.service,
     name: enc.name,
@@ -117,58 +117,68 @@ function readCredentialFile(filepath: string): StoredCredential {
   };
 }
 
-function writeEncryptedCredential(filepath: string, cred: StoredCredential): void {
-  const enc: EncryptedCredential = {
-    service: cred.service,
-    name: cred.name,
-    encrypted: encrypt(cred.value),
-    type: cred.type,
-    stored_at: cred.stored_at,
+function writeEncryptedAccess(filepath: string, access: StoredAccess): void {
+  const enc: EncryptedAccess = {
+    service: access.service,
+    name: access.name,
+    encrypted: encrypt(access.value),
+    type: access.type,
+    stored_at: access.stored_at,
   };
   writeFileSync(filepath, JSON.stringify(enc, null, 2), { encoding: "utf-8", mode: 0o600 });
-  chmodSync(filepath, 0o600); // ensure permissions even if umask interfered
+  chmodSync(filepath, 0o600);
 }
 
-export function storeCredential(
-  service: string,
+export function storeAccess(
+  domain: string,
+  resource: string,
   name: string,
   value: string,
   type: string
 ): void {
-  ensureDir();
-  const cred: StoredCredential = {
-    service,
+  ensureDir(domain);
+  const access: StoredAccess = {
+    service: resource,
     name,
     value,
     type,
     stored_at: new Date().toISOString(),
   };
-  const filename = `${service.toLowerCase()}_${name.toLowerCase()}.json`;
-  writeEncryptedCredential(join(CREDS_DIR, filename), cred);
-  addCredentialToState(service, name);
+  const filename = `${resource.toLowerCase()}_${name.toLowerCase()}.json`;
+  writeEncryptedAccess(join(accessDir(domain), filename), access);
+  addAccessToState(domain, resource, name);
 }
 
-export function getCredentials(service?: string): StoredCredential[] {
-  ensureDir();
-  const files = readdirSync(CREDS_DIR).filter((f) => f.endsWith(".json"));
-  const creds: StoredCredential[] = [];
-
+function readFromDir(dir: string): StoredAccess[] {
+  if (!existsSync(dir)) return [];
+  const files = readdirSync(dir).filter((f) => f.endsWith(".json"));
+  const results: StoredAccess[] = [];
   for (const f of files) {
     try {
-      creds.push(readCredentialFile(join(CREDS_DIR, f)));
+      results.push(readAccessFile(join(dir, f)));
     } catch {
-      // Skip files that can't be decrypted (e.g. corrupted or wrong key)
       continue;
     }
   }
+  return results;
+}
 
-  if (service) {
-    return creds.filter((c) => c.service.toLowerCase() === service.toLowerCase());
+export function getAccess(domain: string, resource?: string): StoredAccess[] {
+  ensureDir(domain);
+  let creds = readFromDir(accessDir(domain));
+
+  // Fallback: check legacy credentials/ dir for compute domain
+  if (domain === "compute" && creds.length === 0 && existsSync(LEGACY_CREDS_DIR)) {
+    creds = readFromDir(LEGACY_CREDS_DIR);
+  }
+
+  if (resource) {
+    return creds.filter((c) => c.service.toLowerCase() === resource.toLowerCase());
   }
   return creds;
 }
 
-export function getCredential(service: string, name: string): StoredCredential | null {
-  const creds = getCredentials(service);
+export function getAccessItem(domain: string, resource: string, name: string): StoredAccess | null {
+  const creds = getAccess(domain, resource);
   return creds.find((c) => c.name === name) ?? null;
 }

@@ -1,87 +1,83 @@
 # Universal Basic Compute — Agent Toolkit
 
-You are helping a user with the **UBC Agent Toolkit** — a collection of autonomous agents that provision and assemble free-tier cloud services into working projects.
+You are helping a user with the **UBC Agent Toolkit** — a collection of autonomous agents that discover and assemble free resources into working outcomes.
 
 ## What This Repo Is
 
-This repo contains **pre-built agents** that:
-1. **Plan** which free-tier services to combine for a project
-2. **Guide** users through creating accounts and getting API keys
-3. **Assemble** provisioned services into deployed projects
-4. **Maintain** the catalog of available free-tier services
-5. **Set up** agent infrastructure (OpenClaw, etc.) on the user's behalf
+UBC is a **domain-agnostic protocol** for turning free resources into outcomes. It ships with a **compute** domain (cloud services for building software) but can self-expand into any domain — education, health, finance, etc. — as users bring new goals.
+
+The agents:
+1. **Plan** which free resources to combine for a goal
+2. **Guide** users through acquiring access (accounts, API keys, enrollments)
+3. **Assemble** acquired resources into working outcomes
+4. **Discover** new domains and resources when a goal doesn't fit existing domains
 
 ## How To Help The User
 
-When a user opens this repo and asks for help:
-
-1. **Check state first**: Read `.ubc/state.json` (if it exists) to see what's already configured
-2. **If new user**: Walk them through setup — explain what UBC is, show them the recipes, guide them through provisioning
+1. **Check state first**: Call `ubc_status` and `ubc_domains` to see what's configured
+2. **If new user**: Walk them through setup — explain what UBC is, show domains and patterns
 3. **If returning user**: Pick up where they left off based on state
+4. **If goal doesn't match a domain**: Delegate to the discovery agent
 
 ## Available Agents (in `/agents/`)
 
 | Agent | Purpose | When to use |
 |-------|---------|-------------|
 | **master** | Orchestrates everything | Default — delegates to others |
-| **planner** | Selects services for a goal | When user describes a project |
-| **provisioner** | Guides through account signup | When setting up a service |
-| **assembler** | Builds and deploys projects | After all services provisioned |
-| **catalog** | Updates service catalog | When checking for new services |
-| **infra** | Sets up agent infrastructure | When user wants OpenClaw/etc |
+| **planner** | Selects resources for a goal | When user describes a goal |
+| **guide** | Walks through access acquisition | When setting up a resource |
+| **assembler** | Builds outcomes from resources | After all resources acquired |
+| **discovery** | Finds resources, creates domains | When goal doesn't fit a domain |
+| **infra** | Sets up agent infrastructure | Compute domain only |
 
-## Available Services (in `/services/`)
+## Domains (in `/domains/`)
 
-Each YAML file has: signup steps, credential instructions, free-tier limits.
-- **GitHub** — Code hosting, CI/CD (2000 Actions min/mo)
-- **Vercel** — Hosting, serverless (100GB bandwidth/mo)
-- **Supabase** — Postgres, Auth, Edge Functions (500MB DB)
-- **OpenAI** — GPT, embeddings ($5 free credits)
-- **Cloudflare** — Workers, Pages, R2 (100k req/day)
-- **Netlify** — Hosting, forms, edge (100GB bandwidth/mo)
-- **Render** — Web services, Postgres (750 hrs/mo)
-- **Neon** — Serverless Postgres (512MB, branching)
-- **Resend** — Email API (3000 emails/mo)
-- **Upstash** — Serverless Redis (10k commands/day)
+Each domain has: `domain.yaml` (descriptor), `resources/` (catalog), `patterns/` (assembly patterns).
 
-## Available Recipes (in `/recipes/`)
+**compute** — Free-tier cloud services:
+- GitHub, Vercel, Supabase, OpenAI, Cloudflare, Netlify, Render, Neon, Resend, Upstash
+- 5 patterns: blog-ai, portfolio, saas-starter, ai-chatbot, api-backend
 
-Pre-built project blueprints:
-- `blog-ai` — Blog with AI summarization
-- `portfolio` — Personal portfolio site
-- `saas-starter` — SaaS template with auth
-- `ai-chatbot` — GPT-powered chatbot
-- `api-backend` — REST API on Cloudflare Workers
+New domains are created on the fly by the discovery agent when a user's goal doesn't fit existing domains.
 
-## MCP Tools Server (in `/tools/`)
+## Protocol (in `/protocol/`)
 
-Auto-registered via `.mcp.json` when the plugin is loaded. For manual connection from other agents:
+Three schema files that define how domains, resources, and patterns are structured:
+- `resource.schema.yaml` — what a resource looks like in any domain
+- `pattern.schema.yaml` — what an assembly pattern looks like
+- `domain.schema.yaml` — how to register a new domain
 
-```json
-{
-  "mcpServers": {
-    "ubc": {
-      "command": "npx",
-      "args": ["tsx", "tools/src/index.ts"],
-      "cwd": "<path-to-this-repo>"
-    }
-  }
-}
-```
+Agents read these schemas when creating new domain content.
 
-**Tools available**: `ubc_catalog`, `ubc_service_guide`, `ubc_recipes`, `ubc_recipe_detail`, `ubc_status`, `ubc_update_status`, `ubc_store_credential`, `ubc_get_credentials`
+## MCP Tools
+
+| Tool | Description |
+|------|-------------|
+| `ubc_domains` | List all available domains |
+| `ubc_create_domain` | Scaffold a new domain |
+| `ubc_catalog` | Browse resources by domain, category, or search |
+| `ubc_resource_guide` | Get full setup guide for a resource |
+| `ubc_patterns` | List assembly patterns for a domain |
+| `ubc_pattern_detail` | Get full details for a pattern |
+| `ubc_status` | Check setup state (per domain or all) |
+| `ubc_update_status` | Update a resource's status |
+| `ubc_store_access` | Store an access token (encrypted at rest) |
+| `ubc_get_access` | Retrieve stored access tokens |
+
+Legacy aliases (`ubc_recipes`, `ubc_store_credential`, etc.) still work for backward compatibility.
 
 ## State Tracking
 
-- `.ubc/state.json` — What services are provisioned, active recipe, project status
-- `.ubc/credentials/` — Stored API keys and tokens (gitignored)
+- `.ubc/state.json` — Resources acquired per domain, active patterns, project status
+- `.ubc/access/{domain}/` — Encrypted access tokens per domain (AES-256-GCM)
+- `.ubc/.key` — Machine-local encryption key (mode 0600)
 
 ## Guiding A Non-Technical User
 
 Assume the user is **not technical**. When helping them:
 - Use plain, simple language
-- Explain what each service does and why they need it
-- Give step-by-step browser instructions ("Click the blue button that says...")
-- Celebrate small wins ("Your GitHub account is ready!")
+- Explain what each resource does and why they need it
+- Give step-by-step instructions
+- Celebrate small wins
 - Never show raw JSON/code unless they ask
-- If they're confused, offer to explain or try a different approach
+- If their goal doesn't fit a domain, explain that UBC can research and create one
