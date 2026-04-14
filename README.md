@@ -10,6 +10,14 @@ This plugin gives you 6 AI agents that know about 418 free services. Tell them w
 
 ## Quick Start
 
+**Via Claude Code plugin marketplace** (recommended):
+
+```
+/plugin install chiKeka/ubc-plugin
+```
+
+**Manual install:**
+
 ```bash
 git clone https://github.com/chiKeka/ubc-plugin.git
 cd ubc-plugin
