@@ -122,13 +122,14 @@ server.tool(
       return { content: [{ type: "text", text: JSON.stringify(results, null, 2) }] };
     }
 
-    const counts = getCategoryCounts(domain, { excludeStale: exclude_stale });
+    // Honour exclude_stale across every field of the summary so the
+    // response is internally consistent: total_resources, categories,
+    // staleness, and detailed_guides all reflect the same filtered set.
+    const loadOpts = { excludeStale: exclude_stale };
+    const counts = getCategoryCounts(domain, loadOpts);
     const total = Object.values(counts).reduce((a, b) => a + b, 0);
-    const staleness = getStalenessCounts(domain);
-    // Honour exclude_stale for the detailed_guides list too — otherwise
-    // total_resources and detailed_guides can disagree when a detailed
-    // guide has gone stale.
-    const detailed_guides = loadAllResources(domain, { excludeStale: exclude_stale })
+    const staleness = getStalenessCounts(domain, loadOpts);
+    const detailed_guides = loadAllResources(domain, loadOpts)
       .filter((s) => s.has_detailed_guide)
       .map((s) => s.name);
     const summary = {

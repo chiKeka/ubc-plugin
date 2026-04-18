@@ -232,11 +232,19 @@ export function getCategoryCounts(
   return counts;
 }
 
-/** Get staleness counts for a domain. Useful for dashboards and audits. */
+/**
+ * Get staleness counts for a domain. Useful for dashboards and audits.
+ *
+ * Honours the same LoadOptions as loadAllResources so callers can get
+ * counts consistent with a filtered view (e.g. when excludeStale=true
+ * the stale count is 0 by construction; fresh/warn/unknown reflect only
+ * the included resources).
+ */
 export function getStalenessCounts(
-  domain: string = "compute"
+  domain: string = "compute",
+  opts: LoadOptions = {}
 ): Record<StalenessLevel, number> {
-  const all = loadAllResources(domain);
+  const all = loadAllResources(domain, opts);
   const counts: Record<StalenessLevel, number> = {
     fresh: 0,
     warn: 0,
