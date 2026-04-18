@@ -79,7 +79,7 @@ export function loadDetailedResources(domain: string = "compute"): ResourceDefin
       if (!result.success) {
         logSkip(
           `${domain}/${f}`,
-          result.error.issues.map((i) => `${i.path.join(".") || "<root>"}: ${i.message}`)
+          result.error.issues.map((issue) => `${issue.path.join(".") || "<root>"}: ${issue.message}`)
         );
         continue;
       }
@@ -122,7 +122,7 @@ export function loadBulkCatalog(domain: string = "compute"): CatalogEntry[] {
       if (!check.success) {
         logSkip(
           `${domain}/catalog.yaml[${i}]${entryRaw?.name ? ` (${entryRaw.name})` : ""}`,
-          check.error.issues.map((i) => `${i.path.join(".") || "<root>"}: ${i.message}`)
+          check.error.issues.map((issue) => `${issue.path.join(".") || "<root>"}: ${issue.message}`)
         );
         continue;
       }

@@ -55,7 +55,7 @@ export function loadAllPatterns(domain: string = "compute"): Pattern[] {
       if (!check.success) {
         console.error(
           `[ubc] skipping pattern ${domain}/${f}:\n  - ${check.error.issues
-            .map((i) => `${i.path.join(".") || "<root>"}: ${i.message}`)
+            .map((issue) => `${issue.path.join(".") || "<root>"}: ${issue.message}`)
             .join("\n  - ")}`
         );
         continue;

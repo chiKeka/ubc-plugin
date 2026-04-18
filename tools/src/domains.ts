@@ -57,7 +57,7 @@ function loadDescriptorFile(id: string): Domain | null {
     if (!result.success) {
       console.error(
         `[ubc] invalid domain descriptor ${id}/domain.yaml:\n  - ${result.error.issues
-          .map((i) => `${i.path.join(".") || "<root>"}: ${i.message}`)
+          .map((issue) => `${issue.path.join(".") || "<root>"}: ${issue.message}`)
           .join("\n  - ")}`
       );
       return null;
