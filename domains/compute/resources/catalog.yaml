@@ -1,7 +1,8 @@
 # =============================================================================
-# Universal Basic Compute — Free-Tier Service Catalog
-# Generated: 2026-03-23
-# Total services: 300+
+# Bricolage — Compute Domain Bulk Catalog
+# Generated: 2026-03-23 (verified_at)
+# Total bulk entries: 408 (plus 10 detailed guides with their own files)
+# Unique resources after dedup: 411
 # Sources: free-for.dev, cloud provider docs, community lists
 # =============================================================================
 

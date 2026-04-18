@@ -1,6 +1,6 @@
 {
   "mcpServers": {
-    "ubc": {
+    "bricolage": {
       "command": "npx",
       "args": ["tsx", "${CLAUDE_PLUGIN_ROOT}/tools/src/index.ts"],
       "cwd": "${CLAUDE_PLUGIN_ROOT}",

@@ -1,4 +1,4 @@
-Show the user their current UBC status across all domains.
+Show the user their current Bricolage status across all domains.
 
 1. Call `ubc_domains` to list available domains
 2. Call `ubc_status` to get the full state

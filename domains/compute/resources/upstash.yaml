@@ -5,6 +5,9 @@ website: https://upstash.com
 pricing_url: https://upstash.com/pricing
 description: Serverless Redis and Kafka with per-request pricing and generous free tier
 
+free_tier_type: cac_funded
+verified_at: "2026-03-23"
+
 free_tier:
   - name: Redis Commands
     value: 10000

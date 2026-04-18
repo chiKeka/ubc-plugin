@@ -5,6 +5,11 @@ website: https://supabase.com
 pricing_url: https://supabase.com/pricing
 description: Postgres database, Auth, Edge Functions, Realtime, Storage, Vector embeddings
 
+# CAC-funded: free tier is a customer-acquisition bet. Projects on the
+# free tier pause after 7 days of inactivity — factor that into planning.
+free_tier_type: cac_funded
+verified_at: "2026-03-23"
+
 free_tier:
   - name: Database Size
     value: 500

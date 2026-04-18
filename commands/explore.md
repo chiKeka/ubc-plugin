@@ -1,4 +1,4 @@
-Show the user available resources across all UBC domains.
+Show the user available resources across all Bricolage domains.
 
 1. Call `ubc_domains` to list all domains
 2. Ask which domain to explore (or show all)

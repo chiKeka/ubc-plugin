@@ -70,7 +70,11 @@ function migrateState(raw: Record<string, unknown>): UBCState {
       updated_at: (raw.updated_at as string) ?? new Date().toISOString(),
     };
   }
-  return raw as UBCState;
+  // At this point, raw has the new shape (domains-keyed). We route through
+  // `unknown` so TypeScript's structural check stops objecting — we can't
+  // prove the shape statically from Record<string, unknown>, but by
+  // construction the persisted file was written by saveState below.
+  return raw as unknown as UBCState;
 }
 
 export function getState(): UBCState {

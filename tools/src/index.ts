@@ -1,32 +1,48 @@
 #!/usr/bin/env node
 /**
- * UBC MCP Tools Server — Domain-Agnostic Protocol
+ * Bricolage MCP Tools Server — Domain-Agnostic Protocol
  *
- * Exposes UBC capabilities to any agent platform via MCP.
+ * Exposes Bricolage capabilities to any agent platform via MCP.
  * All tools accept an optional `domain` parameter (defaults to "compute").
  *
  * Run with: npx tsx tools/src/index.ts
+ *
+ * Tool names keep the `ubc_` prefix from when this plugin was called
+ * Universal Basic Compute. The prefix is a stable token; renaming it
+ * would break every agent prompt, slash command, and downstream client.
+ *
+ * Trust model: see SECURITY.md in the repo root. In short — this server
+ * hands plaintext tokens to any agent connected to its stdio transport
+ * when the agent requests reveal=true. That is inherent to MCP. Audit
+ * log at .ubc/audit.log records every such reveal.
  */
 
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
-import { loadAllResources, loadResource, searchResources, getCategoryCounts, clearCache } from "./catalog.js";
-import { loadAllPatterns, loadPattern, clearPatternCache } from "./patterns.js";
-import { getState, updateResourceStatus, setActivePattern, setProjectStatus, type UBCState } from "./state.js";
-import { storeAccess, getAccess } from "./access.js";
-import { listDomains, getDomain, scaffoldDomain, validateDomain } from "./domains.js";
+import {
+  loadAllResources,
+  loadResource,
+  searchResources,
+  getCategoryCounts,
+  getStalenessCounts,
+  findCredentialValidator,
+} from "./catalog.js";
+import { loadAllPatterns, loadPattern } from "./patterns.js";
+import { getState, updateResourceStatus } from "./state.js";
+import { storeAccess, getAccess, recordAudit, ValidationError } from "./access.js";
+import { listDomains, scaffoldDomain, validateDomain } from "./domains.js";
 
 const server = new McpServer({
-  name: "ubc-tools",
-  version: "0.3.0",
+  name: "bricolage-tools",
+  version: "0.4.0",
 });
 
 // ── Domain Tools ──────────────────────────────────────
 
 server.tool(
   "ubc_domains",
-  "List all available UBC domains. Each domain is a category of free resources (compute, education, etc.).",
+  "List all available Bricolage domains. Each domain is a category of free resources (compute, education, etc.). Domains include a trust_level — 'blessed' for domains shipped with the plugin, 'user_scaffolded' for domains created locally by the discovery agent.",
   {},
   async () => {
     const domains = listDomains();
@@ -36,7 +52,7 @@ server.tool(
 
 server.tool(
   "ubc_create_domain",
-  "Scaffold a new domain. Creates the directory structure and domain.yaml so the discovery agent can populate it with resources and patterns.",
+  "Scaffold a new domain. Creates the directory structure and domain.yaml so the discovery agent can populate it with resources and patterns. New domains are marked trust_level=user_scaffolded by default; a human reviewer has to promote them to blessed.",
   {
     id: z.string().describe("Domain slug (e.g., 'education', 'health', 'finance')"),
     name: z.string().describe("Human-readable name"),
@@ -51,8 +67,29 @@ server.tool(
     if (validateDomain(id)) {
       return { content: [{ type: "text", text: `Domain "${id}" already exists.` }], isError: true };
     }
-    const domain = scaffoldDomain(id, name, description, categories, resource_types, access_types, assembly_verbs, outcome_types);
-    return { content: [{ type: "text", text: `Created domain "${id}":\n${JSON.stringify(domain, null, 2)}\n\nDirectories created:\n  domains/${id}/resources/\n  domains/${id}/patterns/\n\nThe discovery agent can now populate this domain with resources and patterns.` }] };
+    try {
+      const domain = scaffoldDomain(
+        id, name, description, categories, resource_types, access_types, assembly_verbs, outcome_types
+      );
+      recordAudit({ action: "create_domain", domain: id });
+      return {
+        content: [
+          {
+            type: "text",
+            text:
+              `Created domain "${id}" (trust_level: user_scaffolded):\n${JSON.stringify(domain, null, 2)}\n\n` +
+              `Directories created:\n  domains/${id}/resources/\n  domains/${id}/patterns/\n\n` +
+              `The discovery agent can now populate this domain with resources and patterns.\n` +
+              `Note: user_scaffolded domains have not been reviewed. Agents should warn users before treating their content as authoritative.`,
+          },
+        ],
+      };
+    } catch (err) {
+      return {
+        content: [{ type: "text", text: `Failed to scaffold domain: ${err instanceof Error ? err.message : String(err)}` }],
+        isError: true,
+      };
+    }
   }
 );
 
@@ -60,38 +97,50 @@ server.tool(
 
 server.tool(
   "ubc_catalog",
-  "Browse the UBC resource catalog. Filter by category or search by name/description. Defaults to the 'compute' domain.",
+  "Browse the Bricolage resource catalog. Filter by category or search by name/description. Defaults to the 'compute' domain. Each entry is tagged with a staleness level (fresh, warn, stale, unknown) based on its verified_at date.",
   {
     domain: z.string().default("compute").describe("Domain to browse (e.g., 'compute', 'education')"),
     category: z.string().optional().describe("Filter by category"),
     search: z.string().optional().describe("Search by name, provider, or description"),
     limit: z.number().optional().default(50).describe("Max results to return (default 50)"),
+    exclude_stale: z.boolean().optional().default(false).describe("Exclude resources whose verification is older than 180 days"),
   },
-  async ({ domain, category, search, limit }) => {
+  async ({ domain, category, search, limit, exclude_stale }) => {
     if (!validateDomain(domain)) {
       return { content: [{ type: "text", text: `Domain "${domain}" not found. Use ubc_domains to list available domains.` }], isError: true };
     }
 
     if (search) {
-      const results = searchResources(domain, search, category).slice(0, limit);
+      const results = searchResources(domain, search, category, { excludeStale: exclude_stale }).slice(0, limit);
       return { content: [{ type: "text", text: JSON.stringify(results, null, 2) }] };
     }
 
     if (category) {
-      const results = loadAllResources(domain)
+      const results = loadAllResources(domain, { excludeStale: exclude_stale })
         .filter((s) => s.category === category)
         .slice(0, limit);
       return { content: [{ type: "text", text: JSON.stringify(results, null, 2) }] };
     }
 
-    const counts = getCategoryCounts(domain);
+    // Honour exclude_stale across every field of the summary so the
+    // response is internally consistent: total_resources, categories,
+    // staleness, and detailed_guides all reflect the same filtered set.
+    const loadOpts = { excludeStale: exclude_stale };
+    const counts = getCategoryCounts(domain, loadOpts);
     const total = Object.values(counts).reduce((a, b) => a + b, 0);
+    const staleness = getStalenessCounts(domain, loadOpts);
+    const detailed_guides = loadAllResources(domain, loadOpts)
+      .filter((s) => s.has_detailed_guide)
+      .map((s) => s.name);
     const summary = {
       domain,
       total_resources: total,
       categories: counts,
-      detailed_guides: loadAllResources(domain).filter((s) => s.has_detailed_guide).map((s) => s.name),
-      hint: "Use 'category' to browse a category, or 'search' to find specific resources.",
+      staleness,
+      detailed_guides,
+      hint:
+        "Use 'category' to browse a category, 'search' to find specific resources, " +
+        "or exclude_stale=true to filter out resources whose free-tier claim hasn't been verified recently.",
     };
     return { content: [{ type: "text", text: JSON.stringify(summary, null, 2) }] };
   }
@@ -99,7 +148,7 @@ server.tool(
 
 server.tool(
   "ubc_resource_guide",
-  "Get the full setup guide for a resource — access steps, how to get credentials/tokens, free-tier limits.",
+  "Get the full setup guide for a resource — access steps, how to get credentials/tokens, free-tier limits. Includes verified_at so you can see how fresh the guide is.",
   {
     domain: z.string().default("compute").describe("Domain"),
     resource: z.string().describe("Resource name"),
@@ -197,7 +246,7 @@ server.tool(
 
 server.tool(
   "ubc_store_access",
-  "Store an access token the user has provided (API key, enrollment ID, account credential, etc.).",
+  "Store an access token the user has provided (API key, enrollment ID, account credential, etc.). If the resource's catalog entry declares a validation regex, the value is checked against it before being encrypted — this catches paste-into-wrong-field mistakes.",
   {
     domain: z.string().default("compute").describe("Domain"),
     resource: z.string().describe("Resource name"),
@@ -206,22 +255,38 @@ server.tool(
     type: z.enum(["api_key", "api_token", "connection_string", "account_id", "enrollment", "certificate", "other"]).default("api_key"),
   },
   async ({ domain, resource, name, value, type }) => {
-    storeAccess(domain, resource, name, value, type);
+    const validator = findCredentialValidator(domain, resource, name);
+    try {
+      storeAccess(domain, resource, name, value, type, validator ?? undefined);
+    } catch (err) {
+      if (err instanceof ValidationError) {
+        recordAudit({ action: "store_access_rejected", domain, resource, detail: name });
+        return {
+          content: [{ type: "text", text: err.message }],
+          isError: true,
+        };
+      }
+      throw err;
+    }
     updateResourceStatus(domain, resource, "ready");
+    recordAudit({ action: "store_access", domain, resource, detail: name });
     return { content: [{ type: "text", text: `Stored ${name} for ${resource} (domain: ${domain}).` }] };
   }
 );
 
 server.tool(
   "ubc_get_access",
-  "Get all stored access tokens, optionally filtered by domain and resource. Values masked unless requested.",
+  "Get all stored access tokens, optionally filtered by domain and resource. Values are masked unless reveal=true. Every reveal=true call is written to .ubc/audit.log.",
   {
     domain: z.string().default("compute").describe("Domain"),
     resource: z.string().optional().describe("Filter by resource name"),
-    reveal: z.boolean().default(false).describe("Show actual values (use with care)"),
+    reveal: z.boolean().default(false).describe("Show actual values (use with care — every reveal is audited)"),
   },
   async ({ domain, resource, reveal }) => {
     const tokens = getAccess(domain, resource);
+    if (reveal) {
+      recordAudit({ action: "reveal_access", domain, resource, count: tokens.length });
+    }
     const result = tokens.map((c) => ({
       domain,
       resource: c.service,
@@ -289,8 +354,18 @@ server.tool(
     type: z.enum(["api_key", "api_token", "connection_string", "account_id", "other"]).default("api_key"),
   },
   async ({ service, name, value, type }) => {
-    storeAccess("compute", service, name, value, type);
+    const validator = findCredentialValidator("compute", service, name);
+    try {
+      storeAccess("compute", service, name, value, type, validator ?? undefined);
+    } catch (err) {
+      if (err instanceof ValidationError) {
+        recordAudit({ action: "store_access_rejected", domain: "compute", resource: service, detail: name });
+        return { content: [{ type: "text", text: err.message }], isError: true };
+      }
+      throw err;
+    }
     updateResourceStatus("compute", service, "ready");
+    recordAudit({ action: "store_access", domain: "compute", resource: service, detail: name });
     return { content: [{ type: "text", text: `Stored ${name} for ${service}.` }] };
   }
 );
@@ -304,6 +379,9 @@ server.tool(
   },
   async ({ service, reveal }) => {
     const tokens = getAccess("compute", service);
+    if (reveal) {
+      recordAudit({ action: "reveal_access", domain: "compute", resource: service, count: tokens.length });
+    }
     const result = tokens.map((c) => ({
       service: c.service,
       name: c.name,

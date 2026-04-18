@@ -1,4 +1,4 @@
-Help the user get started with UBC.
+Help the user get started with Bricolage.
 
 1. Call `ubc_domains` to show available domains
 2. Call `ubc_status` to check if there's any existing progress

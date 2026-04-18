@@ -21,7 +21,8 @@ Thumbs.db
 *.swp
 *.swo
 
-# UBC local state and credentials
+# Bricolage local state and credentials
+# (directory kept as .ubc/ for continuity with v0.3 installs)
 .ubc/
 
 # Test

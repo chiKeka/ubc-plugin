@@ -5,6 +5,9 @@ website: https://netlify.com
 pricing_url: https://www.netlify.com/pricing/
 description: Web hosting, serverless functions, forms, identity, edge functions
 
+free_tier_type: cac_funded
+verified_at: "2026-03-23"
+
 free_tier:
   - name: Bandwidth
     value: 100

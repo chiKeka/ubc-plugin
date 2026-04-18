@@ -1,38 +1,88 @@
-# UBC Protocol — Resource Schema
-# A resource is anything free or accessible that can be assembled into an outcome.
-# Cloud service, online course, diagnostic tool, open dataset, community.
+# Bricolage Protocol — Resource Schema
 #
-# Agents creating new resources must follow this structure.
-# Not every field applies to every domain — use what's relevant.
+# A resource is anything free or accessible that can be assembled into
+# an outcome. Cloud service, online course, diagnostic tool, open
+# dataset, community, library, etc.
+#
+# This file is the reference spec. The executable spec lives in
+# tools/src/schemas.ts as ResourceSchema and CatalogEntrySchema. If you
+# change one, change both. Load-time validation runs in
+# tools/src/catalog.ts.
+#
+# Two tiers:
+#   Tier 1 (detailed):  domains/{domain}/resources/{name}.yaml
+#                       Full signup + credentials + validation.
+#   Tier 2 (bulk):      domains/{domain}/resources/catalog.yaml
+#                       Short entries, good for browsing.
+
+# ── Tier 1: Detailed resource ────────────────────────────────────────
 
 required:
   name: string              # Human-readable name
   provider: string          # Who offers it
   category: string          # Domain-specific grouping
-  website: string           # Main URL
+  website: string           # Main URL (must be a valid URL)
   description: string       # One-sentence explanation
-  free_tier: string | list  # What you get for free (string for brief, list for detailed)
+  free_tier:                # List of specific limits (detailed form)
+    - name: string          # e.g. "Actions Minutes"
+      value: number|string  # e.g. 2000
+      unit: string          # e.g. "minutes/month"
+      notes: string         # Optional qualifier (e.g. "Public repos; 500 for private")
 
 optional:
-  access:                   # How to get started with this resource
+  pricing_url: string       # Link to pricing page (for transparency about paid tiers)
+
+  signup:                   # How to get started with this resource
     url: string             # Signup/enrollment/access URL
     method: string          # signup, enroll, download, open, referral
     requires: string        # Prerequisite (e.g., "GitHub account")
     steps: list[string]     # Step-by-step instructions
 
-  tokens:                   # Access tokens, credentials, enrollment IDs
-    - name: string          # e.g., GITHUB_TOKEN, enrollment_id
+  credentials:              # Access tokens, credentials, enrollment IDs
+    - name: string          # e.g. GITHUB_TOKEN
       env_var: string       # Environment variable name
-      type: string          # api_key, token, enrollment, account, certificate, other
-      sensitive: boolean    # True for secrets that must be encrypted
+      type: string          # api_key, api_token, personal_access_token, connection_string, enrollment, etc.
+      sensitive: boolean    # True for secrets that must be encrypted (defaults true for api_key/api_token)
       optional: boolean
       how_to_get:
         url: string
         steps: list[string]
-      validation: string    # Regex or verification method
+      validation: string    # Regex. Enforced by ubc_store_access before encrypting.
 
-  provides: list[string]    # What capabilities this resource gives you
+  provides: list[string]    # Capabilities this resource gives you (used by the planner)
   depends_on: list[string]  # Other resources needed first
-  limits: list              # Usage caps, expiry, quotas
+  limits: list              # Usage caps, expiry, quotas (beyond free_tier)
   notes: string             # Gotchas, warnings
-  verified_at: string       # ISO date of last verification
+
+  # Durability classification. Predicts how likely the free tier is to
+  # survive changes in the provider's business. The planner prefers
+  # durable tiers over cac_funded ones when both achieve the same role.
+  #   cac_funded:     customer acquisition (most SaaS freemium)
+  #   public_good:    institutional grants (GitHub Education, .edu, gov datasets)
+  #   cross_subsidy:  paid-business subsidy (Cloudflare free CDN)
+  #   community:      volunteer or donation-funded
+  #   trial:          time-limited — flag, don't rely
+  #   unknown:        not yet classified
+  free_tier_type: string
+
+  # ISO date of last verification. Resources whose verification is older
+  # than 90 days are tagged "warn"; older than 180 days, "stale" — and
+  # excluded from pattern planning when exclude_stale=true is passed.
+  verified_at: string
+
+# ── Tier 2: Bulk catalog entry ──────────────────────────────────────
+#
+# Bulk entries live in catalog.yaml as an array. They have a simpler
+# shape — free_tier is a single string instead of a list of limits.
+
+tier2_required:
+  name: string
+  provider: string
+  category: string
+  website: string
+  description: string
+  free_tier: string         # e.g. "2000 minutes/month; 500 MB packages"
+
+tier2_optional:
+  free_tier_type: string
+  verified_at: string

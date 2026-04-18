@@ -5,6 +5,9 @@ website: https://resend.com
 pricing_url: https://resend.com/pricing
 description: Email API for developers — send transactional and marketing emails
 
+free_tier_type: cac_funded
+verified_at: "2026-03-23"
+
 free_tier:
   - name: Emails
     value: 3000

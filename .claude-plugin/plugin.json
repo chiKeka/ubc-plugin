@@ -1,13 +1,13 @@
 {
-  "name": "universal-basic-compute",
-  "description": "Domain-agnostic agent toolkit for discovering and assembling free resources into working outcomes. Ships with a compute domain; self-expands into education, health, finance, and more as users bring new goals.",
-  "version": "0.3.0",
+  "name": "bricolage",
+  "description": "Domain-agnostic agent toolkit for assembling free-tier resources into working outcomes. Ships with a compute domain; self-expands into education, health, finance, and more as users bring new goals.",
+  "version": "0.4.0",
   "author": {
     "name": "Bruno Chikeka",
     "url": "https://github.com/chiKeka"
   },
-  "homepage": "https://github.com/chiKeka/ubc-plugin",
-  "repository": "https://github.com/chiKeka/ubc-plugin",
+  "homepage": "https://github.com/chiKeka/bricolage",
+  "repository": "https://github.com/chiKeka/bricolage",
   "license": "MIT",
   "keywords": [
     "free-tier",
@@ -18,6 +18,7 @@
     "education",
     "devtools",
     "automation",
-    "self-expanding"
+    "self-expanding",
+    "bricolage"
   ]
 }
