@@ -1,11 +1,11 @@
 {
-  "name": "universal-basic-compute",
-  "version": "0.3.0",
+  "name": "bricolage",
+  "version": "0.4.0",
   "private": true,
-  "description": "Claude Code plugin — domain-agnostic agent toolkit for assembling free resources into outcomes",
+  "description": "Claude Code plugin — domain-agnostic agent toolkit for assembling free-tier resources into working outcomes",
   "scripts": {
     "mcp": "npx tsx tools/src/index.ts",
-    "postinstall": "echo 'UBC plugin ready. Open in Claude Code and type /setup'"
+    "postinstall": "echo 'Bricolage plugin ready. Open in Claude Code and type /setup'"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.12.0",

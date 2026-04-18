@@ -1,5 +1,5 @@
 /**
- * Zod schemas for UBC protocol content.
+ * Zod schemas for Bricolage protocol content.
  *
  * The three YAML files in /protocol/ describe the shape of domain
  * descriptors, resources, and patterns. These Zod schemas are the

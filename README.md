@@ -1,10 +1,14 @@
-# Universal Basic Compute
+# Bricolage
 
 > A Claude Code plugin that turns free resources into working outcomes. Starts with cloud compute; extends into any domain you bring it.
 
-Free-tier services from GitHub, Vercel, Supabase, OpenAI, Cloudflare, and hundreds of others collectively provide real compute power. Enough to build, deploy, and run applications without paying for infrastructure. We call that **Universal Basic Compute**.
+Free-tier services from GitHub, Vercel, Supabase, OpenAI, Cloudflare, and hundreds of others collectively provide enough capacity to build, deploy, and run real applications without paying for infrastructure. Bricolage gives you agents that know which resources exist, how to claim them, and how to combine them into something that runs.
 
-UBC is not just a service catalog. It is a **domain-agnostic protocol** for assembling free resources into outcomes. The plugin ships with a compute domain (411 unique cloud services, verified 2026-03-23). Other domains (education, health, finance, research) can be scaffolded on the fly by the discovery agent when a user brings a goal the existing domains don't cover.
+The name is from Lévi-Strauss: **bricolage** is the craft of making do with what's at hand. Scan the available parts, pick the ones that fit the goal, assemble. That is what these agents do.
+
+Bricolage is a **domain-agnostic protocol** for assembling free resources into outcomes. The plugin ships with a compute domain (411 unique cloud services, verified 2026-03-23). Other domains - education, health, finance, research - can be scaffolded on the fly by the discovery agent when a user brings a goal the existing domains don't cover.
+
+> **Naming note.** This project used to be called Universal Basic Compute (UBC). The name implied a kind of commons, but most free tiers are customer-acquisition spend, not public goods. Bricolage is the more honest name. MCP tool names still carry the `ubc_` prefix for backward compatibility - the prefix is a stable token, not a claim.
 
 ---
 
@@ -13,14 +17,14 @@ UBC is not just a service catalog. It is a **domain-agnostic protocol** for asse
 **Via the Claude Code plugin marketplace** (recommended):
 
 ```
-/plugin install chiKeka/ubc-plugin
+/plugin install chiKeka/bricolage
 ```
 
 **Manual install:**
 
 ```bash
-git clone https://github.com/chiKeka/ubc-plugin.git
-cd ubc-plugin
+git clone https://github.com/chiKeka/bricolage.git
+cd bricolage
 npm install
 claude --plugin-dir .
 ```
@@ -173,10 +177,10 @@ The MCP server is platform-agnostic. Connect it to OpenClaw, Cursor, Codex, or a
 ```json
 {
   "mcpServers": {
-    "ubc": {
+    "bricolage": {
       "command": "npx",
       "args": ["tsx", "tools/src/index.ts"],
-      "cwd": "/path/to/ubc-plugin"
+      "cwd": "/path/to/bricolage"
     }
   }
 }
@@ -241,4 +245,4 @@ MIT
 
 ---
 
-*Built on the idea that free compute is everywhere. It just needs to be protocolized.*
+*Free compute is everywhere. It just needs to be assembled.*

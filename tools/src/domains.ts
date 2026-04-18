@@ -1,5 +1,5 @@
 /**
- * Domain management — discovers, loads, and scaffolds UBC domains.
+ * Domain management — discovers, loads, and scaffolds Bricolage domains.
  *
  * Each domain is a directory under /domains/ containing:
  *   domain.yaml       — descriptor (id, name, description, categories, trust_level)

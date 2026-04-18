@@ -1,11 +1,15 @@
 #!/usr/bin/env node
 /**
- * UBC MCP Tools Server — Domain-Agnostic Protocol
+ * Bricolage MCP Tools Server — Domain-Agnostic Protocol
  *
- * Exposes UBC capabilities to any agent platform via MCP.
+ * Exposes Bricolage capabilities to any agent platform via MCP.
  * All tools accept an optional `domain` parameter (defaults to "compute").
  *
  * Run with: npx tsx tools/src/index.ts
+ *
+ * Tool names keep the `ubc_` prefix from when this plugin was called
+ * Universal Basic Compute. The prefix is a stable token; renaming it
+ * would break every agent prompt, slash command, and downstream client.
  *
  * Trust model: see SECURITY.md in the repo root. In short — this server
  * hands plaintext tokens to any agent connected to its stdio transport
@@ -30,15 +34,15 @@ import { storeAccess, getAccess, recordAudit, ValidationError } from "./access.j
 import { listDomains, scaffoldDomain, validateDomain } from "./domains.js";
 
 const server = new McpServer({
-  name: "ubc-tools",
-  version: "0.3.1",
+  name: "bricolage-tools",
+  version: "0.4.0",
 });
 
 // ── Domain Tools ──────────────────────────────────────
 
 server.tool(
   "ubc_domains",
-  "List all available UBC domains. Each domain is a category of free resources (compute, education, etc.). Domains include a trust_level — 'blessed' for domains shipped with the plugin, 'user_scaffolded' for domains created locally by the discovery agent.",
+  "List all available Bricolage domains. Each domain is a category of free resources (compute, education, etc.). Domains include a trust_level — 'blessed' for domains shipped with the plugin, 'user_scaffolded' for domains created locally by the discovery agent.",
   {},
   async () => {
     const domains = listDomains();
@@ -93,7 +97,7 @@ server.tool(
 
 server.tool(
   "ubc_catalog",
-  "Browse the UBC resource catalog. Filter by category or search by name/description. Defaults to the 'compute' domain. Each entry is tagged with a staleness level (fresh, warn, stale, unknown) based on its verified_at date.",
+  "Browse the Bricolage resource catalog. Filter by category or search by name/description. Defaults to the 'compute' domain. Each entry is tagged with a staleness level (fresh, warn, stale, unknown) based on its verified_at date.",
   {
     domain: z.string().default("compute").describe("Domain to browse (e.g., 'compute', 'education')"),
     category: z.string().optional().describe("Filter by category"),
