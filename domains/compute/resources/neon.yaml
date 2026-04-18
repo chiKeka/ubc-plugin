@@ -5,6 +5,9 @@ website: https://neon.tech
 pricing_url: https://neon.tech/pricing
 description: Serverless Postgres with branching, auto-scaling, and generous free tier
 
+free_tier_type: cac_funded
+verified_at: "2026-03-23"
+
 free_tier:
   - name: Storage
     value: 512

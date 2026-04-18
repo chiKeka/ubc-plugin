@@ -1,16 +1,16 @@
 # Universal Basic Compute
 
-> A Claude Code plugin that turns free-tier cloud services into working projects.
+> A Claude Code plugin that turns free resources into working outcomes. Starts with cloud compute; extends into any domain you bring it.
 
-Free-tier services from GitHub, Vercel, Supabase, OpenAI, Cloudflare, and hundreds more collectively provide real compute power — enough to build and deploy applications without paying for infrastructure. We call this **Universal Basic Compute**.
+Free-tier services from GitHub, Vercel, Supabase, OpenAI, Cloudflare, and hundreds of others collectively provide real compute power. Enough to build, deploy, and run applications without paying for infrastructure. We call that **Universal Basic Compute**.
 
-This plugin gives you 6 AI agents that know about 418 free services. Tell them what you want to build, and they walk you through provisioning accounts, capturing credentials, and assembling a deployed project — step by step, in plain English.
+UBC is not just a service catalog. It is a **domain-agnostic protocol** for assembling free resources into outcomes. The plugin ships with a compute domain (411 unique cloud services, verified 2026-03-23). Other domains (education, health, finance, research) can be scaffolded on the fly by the discovery agent when a user brings a goal the existing domains don't cover.
 
 ---
 
 ## Quick Start
 
-**Via Claude Code plugin marketplace** (recommended):
+**Via the Claude Code plugin marketplace** (recommended):
 
 ```
 /plugin install chiKeka/ubc-plugin
@@ -26,6 +26,7 @@ claude --plugin-dir .
 ```
 
 Then type:
+
 ```
 /setup
 ```
@@ -39,63 +40,95 @@ The master agent takes over from there.
 ### 6 Agents
 
 | Agent | What it does |
-|-------|-------------|
-| **Master** | Your entry point. Understands your goal and delegates to the right agent. |
-| **Planner** | Analyzes what you want to build and picks the best free services. |
-| **Provisioner** | Walks you through creating accounts and getting API keys, one step at a time. |
-| **Assembler** | Takes your provisioned services and builds + deploys the actual project. |
-| **Catalog** | Searches the web for new free-tier services and keeps the catalog current. |
-| **Infra** | Helps you set up your own agent infrastructure (OpenClaw, MiniClaw, PicoClaw). |
+|---|---|
+| **master** | Your entry point. Takes the user's goal, figures out which domain it belongs to, delegates to the right specialist. |
+| **planner** | Reads a domain's catalog and picks the minimal set of resources to achieve the goal. Outputs a structured plan. |
+| **guide** | Walks users through acquiring access one step at a time. Creating accounts, getting API keys, enrolling in programmes, storing tokens. |
+| **assembler** | Takes the plan plus acquired access and builds the outcome. For compute: scaffolds the project, wires the services, deploys. |
+| **discovery** | Researches new domains and resources. When a goal doesn't fit any existing domain, discovery scaffolds one, populates its catalog, and creates starter patterns. |
+| **infra** | Helps deploy the plugin's own agent runtime (OpenClaw, MiniClaw, PicoClaw) onto user-provisioned free compute. Compute-domain only. |
 
-### 418 Free-Tier Services
+### 411 Free Resources (compute domain)
 
-The catalog spans 6 categories:
+Two-tier catalog:
 
-| Category | Services | Examples |
-|----------|----------|---------|
-| AI & LLMs | 30 | OpenAI, Gemini, Groq, Mistral, Cohere, Replicate |
-| Cloud Infrastructure | 46 | Vercel, Cloudflare, Netlify, Render, Fly.io, Deno Deploy |
-| Data & Storage | 51 | Supabase, Neon, Upstash, MongoDB Atlas, Firebase, Turso |
-| Automation & Workflow | 40 | GitHub Actions, Make, Pipedream, n8n, IFTTT |
-| API Services | 132 | Resend, Stripe, Auth0, Clerk, Algolia, Sentry, Cloudinary |
-| Developer Tools | 109 | GitHub, GitLab, Codespaces, Sentry, PostHog, Linear |
+- **10 detailed guides** with full signup instructions, credential capture walkthroughs, and validation regex. GitHub, Vercel, Supabase, OpenAI, Cloudflare, Netlify, Render, Neon, Resend, Upstash.
+- **408 bulk entries** in `domains/compute/resources/catalog.yaml` covering AI, cloud infra, storage, automation, APIs, and developer tools. (7 of these share a name with a detailed guide; the loader deduplicates so the merged total is 411.)
 
-10 services have **detailed setup guides** with step-by-step signup instructions, credential capture walkthroughs, and validation patterns: GitHub, Vercel, Supabase, OpenAI, Cloudflare, Netlify, Render, Neon, Resend, and Upstash.
+Every resource is classified by **free-tier durability** so the planner can prefer tiers that will outlast the project:
 
-### 5 Project Recipes
+| Classification | Meaning | Example |
+|---|---|---|
+| `cross_subsidy` | Subsidised by a paid business elsewhere. Durable. | Cloudflare, GitHub |
+| `public_good` | Funded by a non-commercial institution. Gated but durable. | GitHub Education, .edu datasets |
+| `cac_funded` | Customer acquisition. Decays when unit economics change. | Most SaaS free tiers |
+| `community` | Volunteer or donation-funded. Availability tracks donations. | Many OSS hosting projects |
+| `trial` | Time-limited. Flag, don't rely. | OpenAI's $5 starter credit |
+| `unknown` | Not yet classified. Treat as `cac_funded`. | Most bulk-catalog entries |
 
-Pre-built blueprints the agents know how to assemble:
+Every resource also carries a `verified_at` date. Resources aged past **90 days** get a `warn` tag; past **180 days**, `stale`. Pattern planning can exclude stale entries with `exclude_stale=true`. Free tiers are decaying assets - Heroku-in-2022 is the canonical case - so the catalog treats them that way.
 
-| Recipe | Services Used | What You Get |
-|--------|--------------|-------------|
-| **Blog with AI** | GitHub + Vercel + Supabase + OpenAI | Next.js blog with AI summarization and smart search |
-| **Portfolio** | GitHub + Vercel + Supabase | Personal site with contact form and analytics |
-| **SaaS Starter** | GitHub + Vercel + Supabase + Cloudflare | Full-stack app with auth, DB, and CDN |
-| **AI Chatbot** | GitHub + Vercel + Supabase + OpenAI | GPT chat with conversation memory |
-| **API Backend** | GitHub + Supabase + Cloudflare | REST API on Cloudflare Workers with Postgres |
+The compute catalog was last verified 2026-03-23.
 
-### 8 MCP Tools (auto-registered)
+### 5 Assembly Patterns (compute domain)
+
+A pattern is a known-good combination of resources that produces an outcome. Previously called "recipes."
+
+| Pattern | Resources Used | What You Get |
+|---|---|---|
+| **blog-ai** | GitHub + Vercel + Supabase + OpenAI | Next.js blog with AI summarisation and smart search |
+| **portfolio** | GitHub + Vercel + Supabase | Personal site with contact form and analytics |
+| **saas-starter** | GitHub + Vercel + Supabase + Cloudflare | Full-stack app with auth, database, CDN |
+| **ai-chatbot** | GitHub + Vercel + Supabase + OpenAI | GPT chat with conversation memory |
+| **api-backend** | GitHub + Supabase + Cloudflare | REST API on Cloudflare Workers with Postgres |
+
+### 10 MCP Tools
 
 | Tool | Description |
-|------|-------------|
-| `ubc_catalog` | Browse and search 418 free services by category or keyword |
-| `ubc_service_guide` | Get full setup guide for a service (signup, credentials, limits) |
-| `ubc_recipes` | List all project recipes |
-| `ubc_recipe_detail` | Get full details for a specific recipe |
-| `ubc_status` | Check what's provisioned and what's still needed |
-| `ubc_update_status` | Mark a service as provisioned |
-| `ubc_store_credential` | Save an API key or token securely |
-| `ubc_get_credentials` | Retrieve stored credentials |
+|---|---|
+| `ubc_domains` | List all registered domains with trust level |
+| `ubc_create_domain` | Scaffold a new domain (defaults to `trust_level: user_scaffolded`) |
+| `ubc_catalog` | Browse resources by domain, category, or search. Returns staleness tag on every entry. |
+| `ubc_resource_guide` | Full setup guide for one resource |
+| `ubc_patterns` | List all assembly patterns for a domain |
+| `ubc_pattern_detail` | Full details for one pattern |
+| `ubc_status` | Check what's acquired, what's pending, which pattern is active |
+| `ubc_update_status` | Update a resource's provisioning status |
+| `ubc_store_access` | Store an access token. Validation regex enforced before encryption. |
+| `ubc_get_access` | Retrieve stored tokens. Values masked unless `reveal=true`. Every reveal is audited. |
 
-### 5 Slash Commands
+Six legacy aliases (`ubc_service_guide`, `ubc_recipes`, `ubc_recipe_detail`, `ubc_store_credential`, `ubc_get_credentials`) still work for backward compatibility but log a deprecation note in their description.
+
+### 4 Slash Commands
 
 | Command | What it does |
-|---------|-------------|
-| `/setup` | Interactive onboarding — checks your state and walks you through everything |
-| `/provision` | Provision a specific service (e.g., `/provision github`) |
-| `/build` | Assemble and deploy your project from provisioned services |
-| `/catalog` | Browse the free-tier service catalog |
-| `/status` | See what's configured and what's missing |
+|---|---|
+| `/setup` | Interactive onboarding. Checks state, asks about your goal, walks you through everything. |
+| `/explore` | Browse the resource catalog. |
+| `/build` | Assemble the outcome from acquired resources. |
+| `/status` | See what's configured and what's missing. |
+
+---
+
+## Protocol
+
+The protocol has three schema files in `/protocol/`:
+
+- `domain.schema.yaml` - how to register a new domain
+- `resource.schema.yaml` - what a resource looks like
+- `pattern.schema.yaml` - what an assembly pattern looks like
+
+Executable counterparts live in `tools/src/schemas.ts` (Zod). Every domain, resource, and pattern is validated at load time. Malformed content is rejected with a structured error on stderr rather than silently accepted. This is what keeps the protocol load-bearing instead of decorative.
+
+### Trust Level
+
+Every domain declares a `trust_level`:
+
+- `blessed` - ships with the plugin; reviewed by maintainers
+- `user_scaffolded` - created locally by the discovery agent; not reviewed
+- `external` - added from an outside source (future: signed registry)
+
+User-scaffolded domains still work, but agents should warn users before treating them as authoritative. This is the minimum governance the protocol needs to avoid becoming a free-for-all.
 
 ---
 
@@ -104,31 +137,31 @@ Pre-built blueprints the agents know how to assemble:
 ```
 You: "I want to build a blog with AI features"
 
-Master Agent:
-  "Great! Let me plan that out for you."
-  → delegates to Planner
+master:
+  "Let me plan that out for you."
+  → delegates to planner
 
-Planner Agent:
-  "You'll need GitHub, Vercel, Supabase, and OpenAI."
-  → returns plan to Master
+planner:
+  Reads domains/compute/resources/ and patterns/.
+  Returns: "Use the blog-ai pattern. GitHub + Vercel + Supabase + OpenAI."
 
-Master Agent:
+master:
   "Let's set up each service. Starting with GitHub..."
-  → delegates to Provisioner
+  → delegates to guide
 
-Provisioner Agent:
+guide:
   "Do you have a GitHub account?"
-  "No? No problem! Go to github.com/signup..."
+  "No? No problem. Go to github.com/signup..."
   "Now let's get your API token..."
-  → walks through each service step by step
+  Walks through each resource one at a time. Stores each token.
 
-Master Agent:
-  "All services are ready! Let me build your blog."
-  → delegates to Assembler
+master:
+  "All resources are ready. Let me build your blog."
+  → delegates to assembler
 
-Assembler Agent:
-  → creates project, wires services, deploys
-  "Your blog is live at https://your-blog.vercel.app!"
+assembler:
+  Scaffolds the project, wires the services, deploys.
+  "Your blog is live at https://your-blog.vercel.app"
 ```
 
 ---
@@ -153,39 +186,52 @@ The MCP server is platform-agnostic. Connect it to OpenClaw, Cursor, Codex, or a
 
 ## Extending
 
-**Add a service** — Create a YAML in `services/` or add an entry to `services/catalog.yaml`
+**Add a resource** - Create a YAML in `domains/compute/resources/` (detailed) or append to `domains/compute/resources/catalog.yaml` (bulk). Include `free_tier_type` and `verified_at`.
 
-**Add a recipe** — Create a YAML in `recipes/` listing required services and what to build
+**Add a pattern** - Create a YAML in `domains/compute/patterns/` following `protocol/pattern.schema.yaml`.
 
-**Add an agent** — Create a `.md` file in `agents/` with frontmatter (name, description, model, tools)
+**Add a domain** - Tell the master agent what you want to accomplish. If no existing domain fits, the discovery agent will scaffold one for you. Or call `ubc_create_domain` directly.
 
-**Update the catalog** — Tell the catalog agent: *"Search for new free-tier AI services"*
+**Add an agent** - Create a `.md` file in `agents/` with frontmatter (name, description, model, tools).
+
+**Update the catalog** - Tell the discovery agent: *"Search for new free-tier AI services and update the catalog."*
 
 ---
 
 ## Plugin Structure
 
 ```
-.claude-plugin/plugin.json    Plugin manifest
-commands/                     5 slash commands
-agents/                       6 agent definitions (Markdown)
-services/                     10 detailed guides + 408 bulk catalog
-recipes/                      5 project blueprints
-tools/                        MCP server (auto-registered on install)
-skills/                       OpenClaw integration
-CLAUDE.md                     Context for Claude
+.claude-plugin/plugin.json      Plugin manifest
+commands/                       4 slash commands
+agents/                         6 agent definitions
+protocol/                       3 schema reference files
+domains/compute/                compute domain (411 resources, 5 patterns)
+domains/<other>/                additional domains scaffolded on the fly
+tools/                          MCP server (Zod validation, audit log, AES-256-GCM encryption)
+skills/                         OpenClaw integration
+CLAUDE.md                       Context for Claude
+SECURITY.md                     Trust model, custody, audit log
 ```
+
+---
+
+## Security
+
+Tokens are encrypted with AES-256-GCM using a machine-local key in `.ubc/.key` (mode 0600).
+
+**Important**: encryption defends against offline file-copy. It does **not** defend against an agent that is already running with this MCP server. Any such agent can call `ubc_get_access` with `reveal=true` and see every token in plaintext. That is inherent to MCP. Reveal events are logged to `.ubc/audit.log` so you can see what looked at what. See `SECURITY.md` for the full threat model.
 
 ---
 
 ## Contributing
 
-Pull requests welcome. The easiest ways to contribute:
+Pull requests welcome. Good places to start:
 
-1. **Add services** — Found a free tier we're missing? Add it to `services/catalog.yaml`
-2. **Add detailed guides** — Write a step-by-step YAML for a service in `services/`
-3. **Add recipes** — Create a new project blueprint in `recipes/`
-4. **Improve agents** — Tune the system prompts in `agents/*.md`
+1. **Add resources** - Find a free tier we're missing? Add it to `domains/compute/resources/catalog.yaml` with `free_tier_type` and `verified_at`.
+2. **Add detailed guides** - Write a step-by-step YAML for a resource in `domains/compute/resources/`.
+3. **Add patterns** - Create a new assembly blueprint in `domains/compute/patterns/`.
+4. **Classify durability** - Help backfill `free_tier_type` across the 408 bulk entries (currently most are `unknown`).
+5. **Refresh verifications** - Walk through a resource, confirm the free tier still matches our entry, bump `verified_at`.
 
 ---
 
@@ -195,4 +241,4 @@ MIT
 
 ---
 
-*Built on the idea that free compute is everywhere — it just needs to be assembled.*
+*Built on the idea that free compute is everywhere. It just needs to be protocolized.*

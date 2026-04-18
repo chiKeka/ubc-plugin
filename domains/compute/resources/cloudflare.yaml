@@ -5,6 +5,12 @@ website: https://cloudflare.com
 pricing_url: https://www.cloudflare.com/plans/
 description: CDN, Workers serverless, Pages hosting, R2 object storage, D1 SQLite database, KV store
 
+# Cross-subsidy: free tier subsidised by enterprise revenue. Cloudflare
+# has an explicit corporate position that the free tier is permanent.
+# One of the most durable classifications in this catalog.
+free_tier_type: cross_subsidy
+verified_at: "2026-03-23"
+
 free_tier:
   - name: Workers Requests
     value: 100000

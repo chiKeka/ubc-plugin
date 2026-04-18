@@ -5,6 +5,11 @@ website: https://platform.openai.com
 pricing_url: https://openai.com/api/pricing/
 description: GPT models, embeddings, DALL-E image generation, Whisper speech-to-text, TTS
 
+# Trial, not sustained free: the $5 credit is one-time and expires.
+# Rate limits shown below apply to PAID usage. Flag this to users.
+free_tier_type: trial
+verified_at: "2026-03-23"
+
 free_tier:
   - name: Free Credits
     value: 5

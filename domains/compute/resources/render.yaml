@@ -5,6 +5,11 @@ website: https://render.com
 pricing_url: https://render.com/pricing
 description: Web services, static sites, PostgreSQL, cron jobs, background workers
 
+# CAC-funded with aggressive decay: free Postgres expires after 90 days,
+# web services spin down on inactivity. Treat as short-project only.
+free_tier_type: cac_funded
+verified_at: "2026-03-23"
+
 free_tier:
   - name: Static Sites
     value: 100

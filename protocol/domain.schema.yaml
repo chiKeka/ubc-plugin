@@ -1,21 +1,39 @@
 # UBC Protocol — Domain Schema
+#
 # A domain is a category of resources that can be assembled into outcomes.
 # Compute, education, health, finance, etc.
 #
 # When the discovery agent creates a new domain, it writes a domain.yaml
 # following this structure into domains/{id}/domain.yaml.
+#
+# This file is the reference spec. The executable spec lives in
+# tools/src/schemas.ts as DomainSchema. If you change one, change both.
+# Load-time validation runs in tools/src/domains.ts — invalid
+# descriptors are skipped with a stderr error rather than silently
+# accepted.
 
 required:
-  id: string                # Slug identifier (e.g., "compute", "education")
+  id: string                # Slug (lowercase letters, digits, "-", "_"). Must match [a-z][a-z0-9_-]*
   name: string              # Human-readable name
   description: string       # What this domain covers
 
 optional:
   version: string           # Domain catalog version
-  created_at: string        # ISO date
+  created_at: string        # ISO date (YYYY-MM-DD)
   categories: list[string]  # Resource groupings within this domain
   resource_types: list      # What kinds of resources exist (service, course, tool, etc.)
   access_types: list        # How access is granted (api_key, enrollment, open, etc.)
   assembly_verbs: list      # What actions agents perform (provision, enroll, build, etc.)
   outcome_types: list       # What gets produced (deployed_app, learning_path, etc.)
   maintainer: string        # Which agent manages this domain
+
+  # Provenance marker. Defaults to user_scaffolded. Callers should warn
+  # users before treating user_scaffolded content as authoritative.
+  #   blessed:          ships with the plugin; reviewed by maintainers
+  #   user_scaffolded:  created locally by the discovery agent
+  #   external:         added from an outside source (future: signed registry)
+  trust_level: string       # One of: blessed | user_scaffolded | external
+
+  # ISO date of last full-catalog review for the whole domain. Individual
+  # resources also carry their own verified_at in resource.schema.yaml.
+  verified_at: string

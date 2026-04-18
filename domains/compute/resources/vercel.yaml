@@ -5,6 +5,11 @@ website: https://vercel.com
 pricing_url: https://vercel.com/pricing
 description: Frontend hosting, serverless functions, edge network, preview deployments
 
+# CAC-funded: tied to conversion-to-paid. Has been repriced before —
+# check bandwidth limits against current docs if project is long-lived.
+free_tier_type: cac_funded
+verified_at: "2026-03-23"
+
 free_tier:
   - name: Bandwidth
     value: 100

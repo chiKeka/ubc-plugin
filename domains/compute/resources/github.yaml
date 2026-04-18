@@ -5,6 +5,11 @@ website: https://github.com
 pricing_url: https://github.com/pricing
 description: Code hosting, CI/CD with Actions, Packages, Codespaces
 
+# Cross-subsidy: Microsoft-funded; hardened by enterprise revenue and
+# long-running Education programmes. One of the most durable free tiers.
+free_tier_type: cross_subsidy
+verified_at: "2026-03-23"
+
 free_tier:
   - name: Actions Minutes
     value: 2000
