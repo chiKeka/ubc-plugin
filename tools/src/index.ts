@@ -125,12 +125,18 @@ server.tool(
     const counts = getCategoryCounts(domain, { excludeStale: exclude_stale });
     const total = Object.values(counts).reduce((a, b) => a + b, 0);
     const staleness = getStalenessCounts(domain);
+    // Honour exclude_stale for the detailed_guides list too — otherwise
+    // total_resources and detailed_guides can disagree when a detailed
+    // guide has gone stale.
+    const detailed_guides = loadAllResources(domain, { excludeStale: exclude_stale })
+      .filter((s) => s.has_detailed_guide)
+      .map((s) => s.name);
     const summary = {
       domain,
       total_resources: total,
       categories: counts,
       staleness,
-      detailed_guides: loadAllResources(domain).filter((s) => s.has_detailed_guide).map((s) => s.name),
+      detailed_guides,
       hint:
         "Use 'category' to browse a category, 'search' to find specific resources, " +
         "or exclude_stale=true to filter out resources whose free-tier claim hasn't been verified recently.",
