@@ -144,15 +144,20 @@ function writeEncryptedAccess(filepath: string, access: StoredAccess): void {
  * ValidationError is thrown by storeAccess when a supplied value fails
  * the resource's declared validation regex. Callers are expected to
  * catch this and surface a clear message; the tool layer does so.
+ *
+ * The credential name is stored as `credentialName` rather than `name`
+ * because `Error.prototype.name` is conventionally the error class name.
+ * Using `name` as a parameter property would be shadowed by the
+ * `this.name = "ValidationError"` assignment below, losing the value.
  */
 export class ValidationError extends Error {
   constructor(
     public readonly resource: string,
-    public readonly name: string,
+    public readonly credentialName: string,
     public readonly pattern: string
   ) {
     super(
-      `Value for ${resource}.${name} did not match expected pattern (${pattern}). ` +
+      `Value for ${resource}.${credentialName} did not match expected pattern (${pattern}). ` +
         `The resource's catalog entry declares this regex — either the value was pasted into the wrong field, ` +
         `or the resource definition's validation needs updating.`
     );
