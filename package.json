@@ -5,6 +5,7 @@
   "description": "Claude Code plugin — domain-agnostic agent toolkit for assembling free-tier resources into working outcomes",
   "scripts": {
     "mcp": "npx tsx tools/src/index.ts",
+    "test": "node --test --import tsx/esm tools/test/*.test.ts",
     "postinstall": "echo 'Bricolage plugin ready. Open in Claude Code and type /setup'"
   },
   "dependencies": {
