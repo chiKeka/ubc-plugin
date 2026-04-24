@@ -33,6 +33,7 @@ import { addAccessToState } from "./state.js";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const UBC_DIR = join(__dirname, "..", "..", ".ubc");
 const KEY_FILE = join(UBC_DIR, ".key");
+const SALT_FILE = join(UBC_DIR, ".salt");
 const AUDIT_LOG = join(UBC_DIR, "audit.log");
 const LEGACY_CREDS_DIR = join(UBC_DIR, "credentials");
 
@@ -40,7 +41,19 @@ const ALGORITHM = "aes-256-gcm";
 const KEY_LENGTH = 32;
 const IV_LENGTH = 16;
 const AUTH_TAG_LENGTH = 16;
-const SALT = "ubc-credential-store";
+const SALT_LENGTH = 16;
+/**
+ * Pre-v0.5 installs used a hardcoded salt. When `.salt` is missing on
+ * disk, we fall back to this value so existing ciphertexts remain
+ * decryptable. Fresh installs get a random per-install salt written to
+ * `.ubc/.salt` on first key access; that becomes the path every call
+ * uses thereafter. There is no forced migration because the static
+ * salt posed no practical attack vector (the secret being salted is
+ * already 32 random bytes); the fix is about closing the "same
+ * hardcoded salt in every install" hygiene issue, not about recovering
+ * from a compromise.
+ */
+const LEGACY_STATIC_SALT = Buffer.from("ubc-credential-store", "utf-8");
 
 export interface StoredAccess {
   service: string;
@@ -76,16 +89,45 @@ function ensureDir(domain: string): void {
   }
 }
 
+/**
+ * Resolve the salt used for scrypt key derivation.
+ *
+ * - If `.ubc/.salt` exists (v0.5+ install, or migrated), use its bytes.
+ * - If `.salt` is missing but `.key` exists (legacy v0.3–v0.4 install),
+ *   derive the key with the hardcoded legacy salt so existing tokens
+ *   stay readable. We deliberately do NOT auto-create a new `.salt`
+ *   for legacy installs: promoting would invalidate every stored token
+ *   on next read. Users who want to rotate should explicitly re-enter
+ *   their credentials after wiping `.ubc/`.
+ * - If neither file exists (fresh install), write a new random 16-byte
+ *   salt to `.salt` alongside the key.
+ */
+function getSalt(): Buffer {
+  ensureUbcDir();
+  if (existsSync(SALT_FILE)) {
+    return readFileSync(SALT_FILE);
+  }
+  if (existsSync(KEY_FILE)) {
+    // Legacy install: .key exists, .salt does not. Keep the old salt.
+    return LEGACY_STATIC_SALT;
+  }
+  const salt = randomBytes(SALT_LENGTH);
+  writeFileSync(SALT_FILE, salt, { mode: 0o600 });
+  chmodSync(SALT_FILE, 0o600);
+  return salt;
+}
+
 function getEncryptionKey(): Buffer {
   ensureUbcDir();
+  const salt = getSalt();
   if (existsSync(KEY_FILE)) {
     const raw = readFileSync(KEY_FILE, "utf-8").trim();
-    return scryptSync(raw, SALT, KEY_LENGTH);
+    return scryptSync(raw, salt, KEY_LENGTH);
   }
   const secret = randomBytes(32).toString("hex");
   writeFileSync(KEY_FILE, secret, { encoding: "utf-8", mode: 0o600 });
   chmodSync(KEY_FILE, 0o600);
-  return scryptSync(secret, SALT, KEY_LENGTH);
+  return scryptSync(secret, salt, KEY_LENGTH);
 }
 
 function encrypt(plaintext: string): string {

@@ -36,9 +36,11 @@ Those mechanisms make sense for multi-tenant systems. Bricolage is not a multi-t
 Tokens are encrypted at rest with AES-256-GCM using a machine-local key. An attacker who copies the `.ubc/access/` directory without the key file cannot decrypt the stored tokens.
 
 - Algorithm: AES-256-GCM
-- Key derivation: `scryptSync` over a 32-byte random secret
+- Key derivation: `scryptSync` over a 32-byte random secret, using a per-install random 16-byte salt
 - Key file: `.ubc/.key` (mode 0600, owner-only)
+- Salt file: `.ubc/.salt` (mode 0600, owner-only; created on first use for fresh installs)
 - Per-token IV and auth tag, packed with the ciphertext
+- Legacy installs (pre-v0.5) that used a hardcoded salt remain decryptable — when `.salt` is missing but `.key` exists, the hardcoded value is used. Fresh installs always generate a random salt.
 
 ### Silent credential overwrites
 
