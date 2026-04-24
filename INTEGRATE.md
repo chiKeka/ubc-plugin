@@ -191,7 +191,17 @@ If you get that, the integration is done. Run the Bricolage test suite (`npm tes
 
 ---
 
-## 9. Troubleshooting
+## 9. Ordering contract
+
+**MCP treats requests as independent.** The server does not promise that request N+1 will see the side effects of request N if request N+1 was sent before request N's response was received. This is how the protocol is designed, not a quirk of this implementation.
+
+In practice this matters for `ubc_store_access` → `ubc_get_access` sequences. The client **must await the store response before issuing the get** if it expects the get to see the stored token. The Bricolage server maintains an internal per-domain mutex to serialize reads and writes to the access store, which guarantees that once a store response comes back, the on-disk state is fully consistent. It cannot guarantee cross-request consistency before that response.
+
+Every well-behaved MCP client (Claude Desktop, Claude Code, Cursor, Codex, the SDK's own request primitives) already awaits responses. Custom HTTP shims or runtimes that pipeline requests over a single session must do the same for state-mutating sequences.
+
+---
+
+## 10. Troubleshooting
 
 **`npx tsx` is slow on cold start.** Expected — it compiles TypeScript on the fly. Keep the server alive for the session rather than spawning per tool call. `Claude Desktop` and `Claude Code` already do this; custom runtimes should too.
 
@@ -205,7 +215,7 @@ If you get that, the integration is done. Run the Bricolage test suite (`npm tes
 
 ---
 
-## 10. Security contract (read before shipping)
+## 11. Security contract (read before shipping)
 
 See `SECURITY.md`. The short version:
 

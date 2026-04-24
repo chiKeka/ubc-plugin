@@ -23,6 +23,7 @@ import { z } from "zod";
 import {
   loadAllResources,
   loadResource,
+  loadDetailedResources,
   searchResources,
   getCategoryCounts,
   getStalenessCounts,
@@ -30,7 +31,14 @@ import {
 } from "./catalog.js";
 import { loadAllPatterns, loadPattern } from "./patterns.js";
 import { getState, updateResourceStatus } from "./state.js";
-import { storeAccess, getAccess, recordAudit, ValidationError } from "./access.js";
+import {
+  storeAccess,
+  getAccess,
+  storeAccessSerialized,
+  getAccessSerialized,
+  recordAudit,
+  ValidationError,
+} from "./access.js";
 import { listDomains, scaffoldDomain, validateDomain } from "./domains.js";
 
 const server = new McpServer({
@@ -255,9 +263,19 @@ server.tool(
     type: z.enum(["api_key", "api_token", "connection_string", "account_id", "enrollment", "certificate", "other"]).default("api_key"),
   },
   async ({ domain, resource, name, value, type }) => {
-    const validator = findCredentialValidator(domain, resource, name);
+    // The validator lookup walks the catalog and can do real I/O on a
+    // cold cache. Defer it into the serialized queue so we don't lose
+    // the arrival-order advantage to a slow first-call warm-up.
     try {
-      storeAccess(domain, resource, name, value, type, validator ?? undefined);
+      await storeAccessSerialized(
+        domain,
+        resource,
+        name,
+        value,
+        type,
+        undefined,
+        () => findCredentialValidator(domain, resource, name) ?? undefined
+      );
     } catch (err) {
       if (err instanceof ValidationError) {
         recordAudit({ action: "store_access_rejected", domain, resource, detail: name });
@@ -283,7 +301,7 @@ server.tool(
     reveal: z.boolean().default(false).describe("Show actual values (use with care — every reveal is audited)"),
   },
   async ({ domain, resource, reveal }) => {
-    const tokens = getAccess(domain, resource);
+    const tokens = await getAccessSerialized(domain, resource);
     if (reveal) {
       recordAudit({ action: "reveal_access", domain, resource, count: tokens.length });
     }
@@ -354,9 +372,16 @@ server.tool(
     type: z.enum(["api_key", "api_token", "connection_string", "account_id", "other"]).default("api_key"),
   },
   async ({ service, name, value, type }) => {
-    const validator = findCredentialValidator("compute", service, name);
     try {
-      storeAccess("compute", service, name, value, type, validator ?? undefined);
+      await storeAccessSerialized(
+        "compute",
+        service,
+        name,
+        value,
+        type,
+        undefined,
+        () => findCredentialValidator("compute", service, name) ?? undefined
+      );
     } catch (err) {
       if (err instanceof ValidationError) {
         recordAudit({ action: "store_access_rejected", domain: "compute", resource: service, detail: name });
@@ -378,7 +403,7 @@ server.tool(
     reveal: z.boolean().default(false),
   },
   async ({ service, reveal }) => {
-    const tokens = getAccess("compute", service);
+    const tokens = await getAccessSerialized("compute", service);
     if (reveal) {
       recordAudit({ action: "reveal_access", domain: "compute", resource: service, count: tokens.length });
     }
@@ -418,7 +443,31 @@ server.resource(
 
 // ── Start ──────────────────────────────────────────────
 
+/**
+ * Warm the catalog cache before accepting any tool calls. The first
+ * findCredentialValidator() or loadResource() call triggers YAML parsing
+ * through Zod for every detailed guide (10 files, ~30ms on cold disk).
+ * Doing that work at startup removes the cold-start imbalance between
+ * ubc_store_access (which needs the validator regex) and ubc_get_access
+ * (which does not). Without this, a client that fires store-then-get
+ * back-to-back can observe the get dispatching first because the store
+ * handler is blocked on the cold-cache load — independent of the
+ * per-domain access mutex, which serializes I/O but cannot re-order
+ * the SDK's request dispatcher.
+ */
+function warmCatalog(): void {
+  try {
+    // Prime the detailed-guide cache for compute (the only blessed domain).
+    // Any future domain will cold-load on first use; that is acceptable
+    // because new domains arrive via discovery, not during hot paths.
+    loadDetailedResources("compute");
+  } catch (err) {
+    console.error("Catalog warm-up failed (continuing):", err);
+  }
+}
+
 async function main() {
+  warmCatalog();
   const transport = new StdioServerTransport();
   await server.connect(transport);
 }

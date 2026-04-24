@@ -165,6 +165,36 @@ export class ValidationError extends Error {
   }
 }
 
+/**
+ * Per-domain FIFO queue for access-store operations.
+ *
+ * The MCP SDK dispatches concurrent tool calls in parallel, so a rapid
+ * store-then-get sequence on the same session can race: the get's
+ * readdirSync microtask completes before the store's writeFileSync
+ * microtask, returning an empty array even though the file is about to
+ * exist. This is observable any time a client does not await the store
+ * response before issuing get.
+ *
+ * storeAccessSerialized and getAccessSerialized route through this
+ * queue so every call for a given domain is strictly ordered behind
+ * any prior call. The synchronous storeAccess and getAccess exports
+ * remain available for internal callers that already control ordering
+ * (tests, initialization). The MCP tool handlers in index.ts use the
+ * serialized variants.
+ *
+ * The queue is in-process only; nothing here defends against
+ * cross-process races, but Bricolage is single-process by design.
+ */
+const accessQueues = new Map<string, Promise<void>>();
+
+function enqueue<T>(domain: string, fn: () => T): Promise<T> {
+  const prev = accessQueues.get(domain) ?? Promise.resolve();
+  const next = prev.then(fn);
+  // Silence rejections so a failure in one step does not block the next.
+  accessQueues.set(domain, next.then(() => undefined, () => undefined));
+  return next;
+}
+
 export function storeAccess(
   domain: string,
   resource: string,
@@ -233,6 +263,41 @@ export function getAccess(domain: string, resource?: string): StoredAccess[] {
     return creds.filter((c) => c.service.toLowerCase() === resource.toLowerCase());
   }
   return creds;
+}
+
+/**
+ * Serialized wrapper around storeAccess. MCP tool handlers use this so
+ * a subsequent getAccessSerialized on the same domain is guaranteed to
+ * see the write.
+ */
+export function storeAccessSerialized(
+  domain: string,
+  resource: string,
+  name: string,
+  value: string,
+  type: string,
+  validationRegex?: string,
+  /**
+   * Deferred validator lookup. If provided, the queued function calls
+   * this inside the queue instead of relying on a pre-resolved regex.
+   * Use this when the lookup itself is expensive (cold catalog cache)
+   * and you don't want that cost to push your call behind calls that
+   * skip the lookup.
+   */
+  resolveValidator?: () => string | undefined
+): Promise<void> {
+  return enqueue(domain, () => {
+    const regex = resolveValidator ? resolveValidator() : validationRegex;
+    return storeAccess(domain, resource, name, value, type, regex);
+  });
+}
+
+/** Serialized wrapper around getAccess. See storeAccessSerialized. */
+export function getAccessSerialized(
+  domain: string,
+  resource?: string
+): Promise<StoredAccess[]> {
+  return enqueue(domain, () => getAccess(domain, resource));
 }
 
 export function getAccessItem(domain: string, resource: string, name: string): StoredAccess | null {
