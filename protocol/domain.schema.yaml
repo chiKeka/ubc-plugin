@@ -29,7 +29,7 @@ optional:
 
   # Provenance marker. Defaults to user_scaffolded. Callers should warn
   # users before treating user_scaffolded content as authoritative.
-  #   blessed:          ships with the plugin; reviewed by maintainers
+  #   blessed:          ships in the main repo; reviewed by maintainers
   #   user_scaffolded:  created locally by the discovery agent
   #   external:         added from an outside source (future: signed registry)
   trust_level: string       # One of: blessed | user_scaffolded | external

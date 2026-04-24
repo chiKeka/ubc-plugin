@@ -10,8 +10,8 @@
  * time. Invalid descriptors are logged and skipped rather than silently
  * accepted, which is what keeps the protocol load-bearing.
  *
- * The trust_level field distinguishes "blessed" domains that ship with
- * the plugin from "user_scaffolded" domains created locally by the
+ * The trust_level field distinguishes "blessed" domains that ship in
+ * the main repo from "user_scaffolded" domains created locally by the
  * discovery agent. Callers can use this to warn users before treating
  * unreviewed content as authoritative.
  */

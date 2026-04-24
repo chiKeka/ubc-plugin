@@ -4,11 +4,11 @@ This document describes what Bricolage protects against, what it does not protec
 
 ## Governance Is Per-User
 
-Bricolage is a plugin. Each person installs it on their own machine. There is no central registry, no signing authority, no blessed-domain marketplace. **You** are the governance for your install.
+Bricolage is an agent system each operator runs on their own machine. There is no central registry, no signing authority, no blessed-domain marketplace. **You** are the governance for your install.
 
 Each install gets:
 
-- The `blessed` compute domain that ships with the repo, reviewed by the maintainer.
+- The `blessed` compute domain that ships in the main repo, reviewed by the maintainer.
 - Whatever additional domains the discovery agent scaffolds locally, tagged `trust_level: user_scaffolded`.
 - Anything you manually add, which you implicitly bless by adding it.
 
@@ -21,7 +21,7 @@ If that works for you, you don't need anything else. If you want more structure,
 
 What's deliberately absent:
 
-- No central registry the plugin fetches from on boot.
+- No central registry Bricolage fetches from on boot.
 - No cryptographic signing of domains.
 - No marketplace of third-party domains.
 
@@ -48,7 +48,7 @@ When `ubc_store_access` receives a value, the resource's declared validation reg
 
 ### Silent unrestricted domain creation
 
-Any agent can scaffold a new domain via `ubc_create_domain`, but every new domain is marked `trust_level: user_scaffolded`. The master agent and the discovery agent are expected to surface this flag to users before treating unreviewed content as authoritative. Only `trust_level: blessed` domains ship with the plugin.
+Any agent can scaffold a new domain via `ubc_create_domain`, but every new domain is marked `trust_level: user_scaffolded`. The master agent and the discovery agent are expected to surface this flag to users before treating unreviewed content as authoritative. Only `trust_level: blessed` domains ship in the main repo.
 
 ### Protocol drift
 
@@ -93,13 +93,13 @@ When the discovery agent scaffolds a new domain, the YAML it writes came from an
 
 ### Shared-machine custody
 
-Every user on the same machine with read access to `.ubc/.key` can decrypt the stored tokens. Bricolage assumes single-user custody of the plugin directory.
+Every user on the same machine with read access to `.ubc/.key` can decrypt the stored tokens. Bricolage assumes single-user custody of the installation directory.
 
-**Mitigation**: keep the plugin checkout inside your user home directory. File permissions are set to 0600 on the key file and on every access file, but those modes only help on a system where the OS enforces them.
+**Mitigation**: keep the Bricolage checkout inside your user home directory. File permissions are set to 0600 on the key file and on every access file, but those modes only help on a system where the OS enforces them.
 
 ### A compromised MCP transport
 
-Bricolage uses a stdio transport between the agent and the MCP server. If the transport is tampered with (by a malicious plugin, a malicious npm dependency, or a compromised `tsx` binary), tokens can be exfiltrated before the audit log records anything.
+Bricolage uses a stdio transport between the agent runtime and the MCP server. If the transport is tampered with (by a malicious npm dependency, a compromised `tsx` binary, or a runtime-level plugin that intercepts stdio), tokens can be exfiltrated before the audit log records anything.
 
 **Mitigation**: the npm dependency surface is small (`@modelcontextprotocol/sdk`, `yaml`, `zod`, plus `tsx` as dev). Keep dependencies pinned. Review `package-lock.json` for unexpected changes.
 
@@ -127,6 +127,6 @@ If you suspect a token has been exposed:
 
 ## Reporting Vulnerabilities
 
-For security issues that should not be public, email the plugin author (see `.claude-plugin/plugin.json` for contact) rather than filing a public GitHub issue. Expect a response within 72 hours.
+For security issues that should not be public, email the project author (see `.claude-plugin/plugin.json` for contact) rather than filing a public GitHub issue. Expect a response within 72 hours.
 
 For non-sensitive security improvements (better audit log format, additional validation hooks, etc.), a PR against `main` is welcome.

@@ -7,7 +7,7 @@
  *
  * Run with: npx tsx tools/src/index.ts
  *
- * Tool names keep the `ubc_` prefix from when this plugin was called
+ * Tool names keep the `ubc_` prefix from when this system was called
  * Universal Basic Compute. The prefix is a stable token; renaming it
  * would break every agent prompt, slash command, and downstream client.
  *
@@ -50,7 +50,7 @@ const server = new McpServer({
 
 server.tool(
   "ubc_domains",
-  "List all available Bricolage domains. Each domain is a category of free resources (compute, education, etc.). Domains include a trust_level — 'blessed' for domains shipped with the plugin, 'user_scaffolded' for domains created locally by the discovery agent.",
+  "List all available Bricolage domains. Each domain is a category of free resources (compute, education, etc.). Domains include a trust_level — 'blessed' for domains shipped in the main repo, 'user_scaffolded' for domains created locally by the discovery agent.",
   {},
   async () => {
     const domains = listDomains();

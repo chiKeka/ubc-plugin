@@ -25,7 +25,7 @@ Use the Bricolage MCP tools to:
 7. **Track progress**: Call `ubc_update_status` to mark resources as acquired.
 8. **Create domains**: Call `ubc_create_domain` when a goal needs a new domain. New domains default to `trust_level: user_scaffolded` - tell the user.
 
-> Tool names keep the `ubc_` prefix from when this plugin was called
+> Tool names keep the `ubc_` prefix from when this system was called
 > Universal Basic Compute. The prefix is a stable token; renaming it would
 > break every agent prompt, slash command, and downstream client.
 

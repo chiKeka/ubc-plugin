@@ -22,9 +22,9 @@ The agents:
 4. **If goal doesn't match a domain**: Delegate to the discovery agent
 
 > Note on tool names: MCP tool names keep the `ubc_` prefix from when this
-> plugin was called Universal Basic Compute. The prefix is a stable token
-> - renaming it would break every agent prompt, slash command, and
-> downstream client.
+> system was called Universal Basic Compute. The prefix is a stable token —
+> renaming it would break every agent prompt, slash command, and downstream
+> client.
 
 ## Available Agents (in `/agents/`)
 

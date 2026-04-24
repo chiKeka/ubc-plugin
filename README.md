@@ -1,35 +1,37 @@
 # Bricolage
 
-> A Claude Code plugin that turns free resources into working outcomes. Starts with cloud compute; extends into any domain you bring it.
+> An agentic system that turns free-tier resources into working outcomes. Deployable on OpenClaw, ZeroClaw, Claude Code, or any MCP-compatible runtime. Starts with cloud compute; extends into any domain you bring it.
 
-Free-tier services from GitHub, Vercel, Supabase, OpenAI, Cloudflare, and hundreds of others collectively provide enough capacity to build, deploy, and run real applications without paying for infrastructure. Bricolage gives you agents that know which resources exist, how to claim them, and how to combine them into something that runs.
+Free-tier services from GitHub, Vercel, Supabase, OpenAI, Cloudflare, and hundreds of others give you enough capacity to build, deploy, and run applications without paying for infrastructure. Bricolage is six specialist agents that know which resources exist, how to claim them, and how to combine them into something that runs.
 
 The name is from Lévi-Strauss: **bricolage** is the craft of making do with what's at hand. Scan the available parts, pick the ones that fit the goal, assemble. That is what these agents do.
 
-Bricolage is a **domain-agnostic protocol** for assembling free resources into outcomes. The plugin ships with a compute domain (411 unique cloud services, verified 2026-03-23). Other domains - education, health, finance, research - can be scaffolded on the fly by the discovery agent when a user brings a goal the existing domains don't cover.
+Bricolage is a **domain-agnostic protocol** for assembling free resources into outcomes. It ships a compute domain with **10 fully verified resources** (detailed guides, token validation regex, verified 2026-03-23) plus **401 bulk-catalog entries** surveyed the same day for discoverability. Other domains — education, health, finance, research — can be scaffolded on the fly by the discovery agent when a user brings a goal the existing domains don't cover.
 
-> **Naming note.** This project used to be called Universal Basic Compute (UBC). The name implied a kind of commons, but most free tiers are customer-acquisition spend, not public goods. Bricolage is the more honest name. MCP tool names still carry the `ubc_` prefix for backward compatibility - the prefix is a stable token, not a claim.
+> **Naming note.** This project used to be called Universal Basic Compute (UBC). The name implied a kind of commons, but most free tiers are customer-acquisition spend, not public goods. Bricolage is the more honest name. MCP tool names still carry the `ubc_` prefix for backward compatibility — the prefix is a stable token, not a claim.
 
 ---
 
 ## Quick Start
 
-**Via the Claude Code plugin marketplace** (recommended):
+Bricolage exposes a standards-compliant MCP server over stdio. Any MCP-compatible runtime works. See **[INTEGRATE.md](./INTEGRATE.md)** for the full wire-up.
+
+**Via Claude Code** (one of several supported runtimes):
 
 ```
 /plugin install chiKeka/bricolage
 ```
 
-**Manual install:**
+**Via any other MCP runtime** (OpenClaw, ZeroClaw, Claude Desktop, Cursor, Codex, custom):
 
 ```bash
 git clone https://github.com/chiKeka/bricolage.git
 cd bricolage
 npm install
-claude --plugin-dir .
+# then point your runtime at `npx tsx tools/src/index.ts` — see INTEGRATE.md §2
 ```
 
-Then type:
+Then in your runtime:
 
 ```
 /setup
@@ -50,7 +52,7 @@ The master agent takes over from there.
 | **guide** | Walks users through acquiring access one step at a time. Creating accounts, getting API keys, enrolling in programmes, storing tokens. |
 | **assembler** | Takes the plan plus acquired access and builds the outcome. For compute: scaffolds the project, wires the services, deploys. |
 | **discovery** | Researches new domains and resources. When a goal doesn't fit any existing domain, discovery scaffolds one, populates its catalog, and creates starter patterns. |
-| **infra** | Helps deploy the plugin's own agent runtime (OpenClaw, MiniClaw, PicoClaw) onto user-provisioned free compute. Compute-domain only. |
+| **infra** | Helps deploy Bricolage's own agent runtime (OpenClaw, MiniClaw, PicoClaw) onto user-provisioned free compute. Compute-domain only. |
 
 ### 411 Free Resources (compute domain)
 
@@ -128,7 +130,7 @@ Executable counterparts live in `tools/src/schemas.ts` (Zod). Every domain, reso
 
 Every domain declares a `trust_level`:
 
-- `blessed` - ships with the plugin; reviewed by maintainers
+- `blessed` — ships in the main repo; reviewed by maintainers
 - `user_scaffolded` - created locally by the discovery agent; not reviewed
 - `external` - added from an outside source (future: signed registry)
 
@@ -202,18 +204,21 @@ The MCP server is platform-agnostic. Connect it to OpenClaw, Cursor, Codex, or a
 
 ---
 
-## Plugin Structure
+## Repository Structure
 
 ```
-.claude-plugin/plugin.json      Plugin manifest
+.claude-plugin/plugin.json      Claude Code plugin manifest (one of several runtimes)
+.mcp.json                       MCP server config for Claude Code / Desktop / Cursor / Codex
+INTEGRATE.md                    Wire-up guide for any MCP-compatible runtime
 commands/                       4 slash commands
 agents/                         6 agent definitions
 protocol/                       3 schema reference files
 domains/compute/                compute domain (411 resources, 5 patterns)
 domains/<other>/                additional domains scaffolded on the fly
 tools/                          MCP server (Zod validation, audit log, AES-256-GCM encryption)
-skills/                         OpenClaw integration
-CLAUDE.md                       Context for Claude
+tools/test/                     npm test — schema, catalog, access, MCP handshake, race contract
+skills/                         Runtime skill manifests (e.g. OpenClaw)
+CLAUDE.md                       Context file for Claude-family runtimes
 SECURITY.md                     Trust model, custody, audit log
 ```
 

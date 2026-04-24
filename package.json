@@ -1,12 +1,12 @@
 {
   "name": "bricolage",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "private": true,
-  "description": "Claude Code plugin — domain-agnostic agent toolkit for assembling free-tier resources into working outcomes",
+  "description": "Domain-agnostic agent system for assembling free-tier resources into working outcomes. Deployable on OpenClaw, ZeroClaw, Claude Code, or any MCP-compatible runtime.",
   "scripts": {
     "mcp": "npx tsx tools/src/index.ts",
     "test": "node --test --import tsx/esm tools/test/*.test.ts",
-    "postinstall": "echo 'Bricolage plugin ready. Open in Claude Code and type /setup'"
+    "postinstall": "echo 'Bricolage ready. Wire it into any MCP runtime — see INTEGRATE.md.'"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.12.0",

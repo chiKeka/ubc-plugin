@@ -105,8 +105,30 @@ export function loadBulkCatalog(domain: string = "compute"): CatalogEntry[] {
   try {
     const raw = readFileSync(catalogFile, "utf-8");
     const parsed = parse(raw);
-    if (!Array.isArray(parsed)) {
-      console.error(`[ubc] ${domain}/catalog.yaml did not parse as an array`);
+
+    /**
+     * catalog.yaml supports two shapes:
+     *
+     *   Array form (v0.3–v0.4):      [ {entry}, {entry}, ... ]
+     *   Object form (v0.5+):         { surveyed_at: "YYYY-MM-DD", entries: [ {entry}, ... ] }
+     *
+     * The object form lets a maintainer tag the whole file with a sweep
+     * date ("we saw these resources exist on this day") without
+     * claiming per-entry verification. Each entry can still override
+     * surveyed_at locally, and an entry can add verified_at to promote
+     * itself to the fully-verified tier.
+     */
+    let entriesRaw: unknown[];
+    let defaultSurveyedAt: string | undefined;
+
+    if (Array.isArray(parsed)) {
+      entriesRaw = parsed;
+    } else if (parsed && typeof parsed === "object" && Array.isArray((parsed as Record<string, unknown>).entries)) {
+      entriesRaw = (parsed as { entries: unknown[] }).entries;
+      const sa = (parsed as { surveyed_at?: unknown }).surveyed_at;
+      if (typeof sa === "string") defaultSurveyedAt = sa;
+    } else {
+      console.error(`[ubc] ${domain}/catalog.yaml must be an array or an object with an 'entries' array`);
       bulkCaches.set(domain, []);
       return [];
     }
@@ -116,12 +138,16 @@ export function loadBulkCatalog(domain: string = "compute"): CatalogEntry[] {
     );
 
     const result: CatalogEntry[] = [];
-    for (let i = 0; i < parsed.length; i++) {
-      const entryRaw = parsed[i];
+    for (let i = 0; i < entriesRaw.length; i++) {
+      const entryRaw = entriesRaw[i];
       const check = CatalogEntrySchema.safeParse(entryRaw);
       if (!check.success) {
+        const nameHint =
+          entryRaw && typeof entryRaw === "object" && "name" in entryRaw
+            ? ` (${(entryRaw as { name?: unknown }).name})`
+            : "";
         logSkip(
-          `${domain}/catalog.yaml[${i}]${entryRaw?.name ? ` (${entryRaw.name})` : ""}`,
+          `${domain}/catalog.yaml[${i}]${nameHint}`,
           check.error.issues.map((issue) => `${issue.path.join(".") || "<root>"}: ${issue.message}`)
         );
         continue;
@@ -129,6 +155,8 @@ export function loadBulkCatalog(domain: string = "compute"): CatalogEntry[] {
       const entry = check.data;
       result.push({
         ...entry,
+        // Inherit file-level surveyed_at if the entry did not override it.
+        surveyed_at: entry.surveyed_at ?? defaultSurveyedAt,
         has_detailed_guide: detailedNames.has(entry.name.toLowerCase()),
         staleness: stalenessLevel(entry.verified_at),
       });

@@ -57,7 +57,7 @@ export type FreeTierType = z.infer<typeof FreeTierType>;
 /**
  * trust_level classifies the provenance of a domain itself.
  *
- * blessed:          Ships with the plugin; reviewed by maintainers.
+ * blessed:          Ships in the main repo; reviewed by maintainers.
  * user_scaffolded:  Created locally by the discovery agent. Not reviewed.
  *                   Agents should warn users before treating its content
  *                   as authoritative.
@@ -166,7 +166,23 @@ export const CatalogEntrySchema = z
     description: z.string().min(1),
     free_tier: z.string(),
     free_tier_type: FreeTierType.optional().default("unknown"),
+
+    /**
+     * Strongest signal. Present only when a maintainer has manually
+     * confirmed the free-tier claim against provider docs on this
+     * date. Detailed guides typically set this; bulk entries usually
+     * do not. Drives the staleness band returned by the catalog API.
+     */
     verified_at: IsoDate.optional(),
+
+    /**
+     * Weaker signal. Present when the entry was seen in a catalog
+     * sweep on this date but the free-tier claim was not individually
+     * verified. Bulk entries compiled from free-for.dev / community
+     * lists use this field. A surveyed_at entry with no verified_at
+     * means "we know this resource exists" — nothing more.
+     */
+    surveyed_at: IsoDate.optional(),
   })
   .passthrough();
 export type CatalogEntry = z.infer<typeof CatalogEntrySchema>;
